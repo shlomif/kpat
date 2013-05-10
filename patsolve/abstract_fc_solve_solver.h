@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 1998-2002 Tom Holroyd <tomh@kurage.nimh.nih.gov>
  * Copyright (C) 2006-2009 Stephan Kulow <coolo@kde.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -16,51 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FREECELLSOLVER_H
-#define FREECELLSOLVER_H
+#ifndef ABSTRACT_FC_SOLVE_SOLVER_H
+#define ABSTRACT_FC_SOLVE_SOLVER_H
 
-#include "abstract_fc_solve_solver.h"
+#include "patsolve.h"
 
-class Freecell;
-
-class FreecellSolver : public FcSolveSolver
+class FcSolveSolver : public Solver
 {
 public:
-    FreecellSolver(const Freecell *dealer);
-#if 0
-    int good_automove(int o, int r);
+    FcSolveSolver();
+    virtual ~FcSolveSolver();
+    virtual int get_possible_moves(int *a, int *numout);
     virtual bool isWon();
     virtual void make_move(MOVE *m);
     virtual void undo_move(MOVE *m);
-    virtual void prioritize(MOVE *mp0, int n);
     virtual int getOuts();
     virtual unsigned int getClusterNumber();
-    virtual int get_possible_moves(int *a, int *numout);
-#endif
-    virtual void translate_layout();
-#if 0
+    virtual void translate_layout() = 0;
     virtual void unpack_cluster( unsigned int k );
-#endif
-    virtual MoveHint translateMove(const MOVE &m);
-    virtual void setFcSolverGameParams();
-    virtual int get_cmd_line_arg_count();
-    virtual const char * * get_cmd_line_args();
-#if 0
+    virtual MoveHint translateMove(const MOVE &m) = 0;
+    virtual Solver::ExitStatus patsolve( int _max_positions = -1, bool _debug = false);
+    virtual void setFcSolverGameParams() = 0;
+
     virtual void print_layout();
 
-    int Nwpiles; /* the numbers we're actually using */
-    int Ntpiles;
-
+    virtual int get_cmd_line_arg_count() = 0;
+    virtual const char * * get_cmd_line_args() = 0;
 /* Names of the cards.  The ordering is defined in pat.h. */
 
-    card_t O[4]; /* output piles store only the rank or NONE */
-    card_t Osuit[4];
+    void * solver_instance;
+    int solver_ret;
+    char * board_as_string;
 
-
-    static int Xparam[];
-#endif
-
-    const Freecell *deal;
 };
 
-#endif // FREECELLSOLVER_H
+#endif // ABSTRACT_FC_SOLVE_SOLVER_H

@@ -46,6 +46,7 @@ public:
     PileType totype;
     signed char pri;        /* move priority (low priority == low value) */
     int turn_index;         /* turn the card index */
+    void * ptr;             /* A ptr for whatever else we'd like to hold. */
 
     bool operator<( const MOVE &m) const
     {
@@ -82,7 +83,7 @@ public:
 
     Solver();
     virtual ~Solver();
-    ExitStatus patsolve( int max_positions = -1, bool debug = false);
+    virtual ExitStatus patsolve( int max_positions = -1, bool debug = false);
     bool recursive(POSITION *pos = 0);
     virtual void translate_layout() = 0;
     bool m_shouldEnd;

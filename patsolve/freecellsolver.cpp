@@ -16,12 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+#include <string.h>
+
+#include <iostream>
+
+#include "freecell-solver/fcs_user.h"
+#include "freecell-solver/fcs_cl.h"
+
 #include "freecellsolver.h"
 
 #include "../freecell.h"
 
-
-/* Some macros used in get_possible_moves(). */
+const int CHUNKSIZE = 100;
+const long int MAX_ITERS_LIMIT = 200000;
 
 /* The following macro implements
 	(Same_suit ? (suit(a) == suit(b)) : (color(a) != color(b)))
@@ -30,10 +38,13 @@
 
 /* Statistics. */
 
+#if 0
 int FreecellSolver::Xparam[] = { 4, 1, 8, -1, 7, 11, 4, 2, 2, 1, 2 };
+#endif
 
 /* These two routines make and unmake moves. */
 
+#if 0
 void FreecellSolver::make_move(MOVE *m)
 {
 	int from, to;
@@ -83,7 +94,9 @@ void FreecellSolver::undo_move(MOVE *m)
         Wlen[from]++;
         hashpile(from);
 }
+#endif
 
+#if 0
 /* Move prioritization.  Given legal, pruned moves, there are still some
 that are a waste of time, especially in the endgame where there are lots of
 possible moves, but few productive ones.  Note that we also prioritize
@@ -174,9 +187,11 @@ void FreecellSolver::prioritize(MOVE *mp0, int n)
 		}
 	}
 }
+#endif
 
 /* Automove logic.  Freecell games must avoid certain types of automoves. */
 
+#if 0
 int FreecellSolver::good_automove(int o, int r)
 {
 	int i;
@@ -216,148 +231,98 @@ int FreecellSolver::good_automove(int o, int r)
 
 	return true;
 }
+#endif
 
-/* Get the possible moves from a position, and store them in Possible[]. */
+#define CMD_LINE_ARGS_NUM 280
 
-int FreecellSolver::get_possible_moves(int *a, int *numout)
+static const char * freecell_solver_cmd_line_args[CMD_LINE_ARGS_NUM] =
 {
-	int i, n, t, w, o, empty, emptyw;
-	card_t card;
-	MOVE *mp;
+"--method", "soft-dfs", "-to", "0123456789", "-step",
+"500", "--st-name", "1", "-nst", "--method",
+"soft-dfs", "-to", "0123467", "-step", "500",
+"--st-name", "2", "-nst", "--method", "random-dfs",
+"-seed", "2", "-to", "0[01][23456789]", "-step",
+"500", "--st-name", "3", "-nst", "--method",
+"random-dfs", "-seed", "1", "-to", "0[0123456789]",
+"-step", "500", "--st-name", "4", "-nst", "--method",
+"random-dfs", "-seed", "3", "-to", "0[01][23467]",
+"-step", "500", "--st-name", "5", "-nst", "--method",
+"random-dfs", "-seed", "4", "-to", "0[0123467]",
+"-step", "500", "--st-name", "9", "-nst", "--method",
+"random-dfs", "-to", "[01][23456789]", "-seed", "8",
+"-step", "500", "--st-name", "10", "-nst",
+"--method", "random-dfs", "-to", "[01][23456789]",
+"-seed", "268", "-step", "500", "--st-name", "12",
+"-nst", "--method", "a-star", "-asw",
+"0.2,0.3,0.5,0,0", "-step", "500", "--st-name", "16",
+"-nst", "--method", "a-star", "-to", "0123467",
+"-asw", "0.5,0,0.3,0,0", "-step", "500", "--st-name",
+"18", "-nst", "--method", "soft-dfs", "-to",
+"0126394875", "-step", "500", "--st-name", "19",
+"--prelude",
+"350@2,350@5,350@9,350@12,350@2,350@10,350@3,350@9,350@5,350@18,350@2,350@5,350@4,350@10,350@4,350@12,1050@9,700@18,350@10,350@5,350@2,350@10,1050@16,350@2,700@4,350@10,1050@2,1400@3,350@18,1750@5,350@16,350@18,700@4,1050@12,2450@5,1400@18,1050@2,1400@10,6300@1,4900@12,8050@18",
+"-ni", "--method", "soft-dfs", "-to", "01ABCDE",
+"-step", "500", "--st-name", "0", "-nst", "--method",
+"random-dfs", "-to", "[01][ABCDE]", "-seed", "1",
+"-step", "500", "--st-name", "1", "-nst", "--method",
+"random-dfs", "-to", "[01][ABCDE]", "-seed", "2",
+"-step", "500", "--st-name", "2", "-nst", "--method",
+"random-dfs", "-to", "[01][ABCDE]", "-seed", "3",
+"-step", "500", "--st-name", "3", "-nst", "--method",
+"random-dfs", "-to", "01[ABCDE]", "-seed", "268",
+"-step", "500", "--st-name", "4", "-nst", "--method",
+"a-star", "-to", "01ABCDE", "-step", "500",
+"--st-name", "5", "-nst", "--method", "a-star",
+"-to", "01ABCDE", "-asw", "0.2,0.3,0.5,0,0", "-step",
+"500", "--st-name", "6", "-nst", "--method",
+"a-star", "-to", "01ABCDE", "-asw", "0.5,0,0.5,0,0",
+"-step", "500", "--st-name", "7", "-nst", "--method",
+"random-dfs", "-to", "[01][ABD][CE]", "-seed", "1900",
+"-step", "500", "--st-name", "8", "-nst", "--method",
+"random-dfs", "-to", "[01][ABCDE]", "-seed", "192",
+"-step", "500", "--st-name", "9", "-nst", "--method",
+"random-dfs", "-to", "[01ABCDE]", "-seed", "1977",
+"-step", "500", "--st-name", "10", "-nst",
+"--method", "random-dfs", "-to", "[01ABCDE]", "-seed",
+"24", "-step", "500", "--st-name", "11", "-nst",
+"--method", "soft-dfs", "-to", "01ABDCE", "-step",
+"500", "--st-name", "12", "-nst", "--method",
+"soft-dfs", "-to", "ABC01DE", "-step", "500",
+"--st-name", "13", "-nst", "--method", "soft-dfs",
+"-to", "01EABCD", "-step", "500", "--st-name", "14",
+"-nst", "--method", "soft-dfs", "-to", "01BDAEC",
+"-step", "500", "--st-name", "15", "--prelude",
+"1000@0,1000@3,1000@0,1000@9,1000@4,1000@9,1000@3,1000@4,2000@2,1000@0,2000@1,1000@14,2000@11,1000@14,1000@3,1000@11,1000@2,1000@0,2000@4,2000@10,1000@0,1000@2,2000@10,1000@0,2000@11,2000@1,1000@10,1000@2,1000@10,2000@0,1000@9,1000@1,1000@2,1000@14,3000@8,1000@2,1000@14,1000@1,1000@10,3000@6,2000@4,1000@2,2000@0,1000@2,1000@11,2000@6,1000@0,5000@1,1000@0,2000@1,1000@2,3000@3,1000@10,1000@14,2000@6,1000@0,1000@2,2000@11,6000@8,8000@9,3000@1,2000@10,2000@14,3000@15,4000@0,1000@8,1000@10,1000@14,7000@0,14000@2,6000@3,7000@4,1000@8,4000@9,2000@15,2000@6,4000@3,2000@4,3000@15,2000@0,6000@1,2000@4,4000@6,4000@9,4000@14,7000@8,3000@0,3000@1,5000@2,3000@3,4000@9,8000@10,9000@3,5000@8,7000@11,11000@12,12000@0,8000@3,11000@9,9000@15,7000@2,12000@8,16000@5,8000@13,18000@0,9000@15,12000@10,16000@0,14000@3,16000@9,26000@4,23000@3,42000@6,22000@8,27000@10,38000@7,41000@0,42000@3,84000@13,61000@15,159000@5,90000@9"
+};
 
-	/* Check for moves from W to O. */
-
-	n = 0;
-	mp = Possible;
-	for (w = 0; w < Nwpiles + Ntpiles; ++w) {
-		if (Wlen[w] > 0) {
-			card = *Wp[w];
-			o = SUIT(card);
-			empty = (O[o] == NONE);
-			if ((empty && (RANK(card) == PS_ACE)) ||
-			    (!empty && (RANK(card) == O[o] + 1))) {
-				mp->card_index = 0;
-				mp->from = w;
-				mp->to = o;
-				mp->totype = O_Type;
-                                mp->turn_index = -1;
-				mp->pri = 0;    /* unused */
-				n++;
-				mp++;
-
-				/* If it's an automove, just do it. */
-
-				if (good_automove(o, RANK(card))) {
-					*a = true;
-                                        mp[-1].pri = 127;
-					if (n != 1) {
-						Possible[0] = mp[-1];
-						return 1;
-					}
-					return n;
-				}
-			}
-		}
-	}
-
-	/* No more automoves, but remember if there were any moves out. */
-
-	*a = false;
-	*numout = n;
-
-	/* Check for moves from non-singleton W cells to one of any
-	empty W cells. */
-
-	emptyw = -1;
-	for (w = 0; w < Nwpiles; ++w) {
-		if (Wlen[w] == 0) {
-			emptyw = w;
-			break;
-		}
-	}
-	if (emptyw >= 0) {
-		for (i = 0; i < Nwpiles + Ntpiles; ++i) {
-			if (i == emptyw || Wlen[i] == 0) {
-				continue;
-			}
-                        bool allowed = false;
-                        if ( i < Nwpiles)
-                            allowed = true;
-                        if ( i >= Nwpiles )
-                            allowed = true;
-                        if ( allowed ) {
-				card = *Wp[i];
-				mp->card_index = 0;
-				mp->from = i;
-				mp->to = emptyw;
-				mp->totype = W_Type;
-                                mp->turn_index = -1;
-                                if ( i >= Nwpiles )
-                                    mp->pri = Xparam[6];
-                                else
-                                    mp->pri = Xparam[3];
-				n++;
-				mp++;
-			}
-		}
-	}
-
-	/* Check for moves from W to non-empty W cells. */
-
-	for (i = 0; i < Nwpiles + Ntpiles; ++i) {
-		if (Wlen[i] > 0) {
-			card = *Wp[i];
-			for (w = 0; w < Nwpiles; ++w) {
-				if (i == w) {
-					continue;
-				}
-				if (Wlen[w] > 0 &&
-				    (RANK(card) == RANK(*Wp[w]) - 1 &&
-				     suitable(card, *Wp[w]))) {
-					mp->card_index = 0;
-					mp->from = i;
-					mp->to = w;
-					mp->totype = W_Type;
-                                        mp->turn_index = -1;
-                                        if ( i >= Nwpiles )
-                                            mp->pri = Xparam[5];
-                                        else
-                                            mp->pri = Xparam[4];
-					n++;
-					mp++;
-				}
-			}
-		}
-	}
-
-        /* Check for moves from W to one of any empty T cells. */
-
-        for (t = 0; t < Ntpiles; ++t) {
-               if (!Wlen[t+Nwpiles]) {
-                       break;
-               }
-        }
-
-        if (t < Ntpiles) {
-               for (w = 0; w < Nwpiles; ++w) {
-                       if (Wlen[w] > 0) {
-                               card = *Wp[w];
-                               mp->card_index = 0;
-                               mp->from = w;
-                               mp->turn_index = -1;
-                               mp->to = t+Nwpiles;
-                               mp->totype = W_Type;
-                               mp->pri = Xparam[7];
-                               n++;
-                               mp++;
-                       }
-               }
-       }
-
-
-	return n;
+int FreecellSolver::get_cmd_line_arg_count()
+{
+    return CMD_LINE_ARGS_NUM;
 }
 
+const char * * FreecellSolver::get_cmd_line_args()
+{
+    return freecell_solver_cmd_line_args;
+}
+
+
+void FreecellSolver::setFcSolverGameParams()
+{
+    /*
+     * I'm using the more standard interface instead of the depracated
+     * user_set_game one. I'd like that each function will have its
+     * own dedicated purpose.
+     *
+     *     Shlomi Fish
+     * */
+    freecell_solver_user_set_num_freecells(solver_instance,4);
+    freecell_solver_user_set_num_stacks(solver_instance,8);
+    freecell_solver_user_set_num_decks(solver_instance,1);
+    freecell_solver_user_set_sequences_are_built_by_type(solver_instance, FCS_SEQ_BUILT_BY_ALTERNATE_COLOR);
+    freecell_solver_user_set_sequence_move(solver_instance, 0);
+    freecell_solver_user_set_empty_stacks_filled_by(solver_instance, FCS_ES_FILLED_BY_ANY_CARD);
+}
+#if 0
 void FreecellSolver::unpack_cluster( unsigned int k )
 {
     /* Get the Out cells from the cluster number. */
@@ -369,27 +334,13 @@ void FreecellSolver::unpack_cluster( unsigned int k )
     k >>= 4;
     O[3] = k & 0xF;
 }
+#endif
 
-bool FreecellSolver::isWon()
-{
-    // maybe won?
-    for (int o = 0; o < 4; ++o) {
-        if (O[o] != PS_KING) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-int FreecellSolver::getOuts()
-{
-    return O[0] + O[1] + O[2] + O[3];
-}
 
 FreecellSolver::FreecellSolver(const Freecell *dealer)
-    : Solver()
+    : FcSolveSolver()
 {
+#if 0
     Osuit[0] = PS_DIAMOND;
     Osuit[1] = PS_CLUB;
     Osuit[2] = PS_HEART;
@@ -399,6 +350,7 @@ FreecellSolver::FreecellSolver(const Freecell *dealer)
     Ntpiles = 4;
 
     setNumberPiles( Nwpiles + Ntpiles );
+#endif
 
     deal = dealer;
 }
@@ -406,6 +358,7 @@ FreecellSolver::FreecellSolver(const Freecell *dealer)
 /* Read a layout file.  Format is one pile per line, bottom to top (visible
 card).  Temp cells and Out on the last two lines, if any. */
 
+#if 0
 void FreecellSolver::translate_layout()
 {
 	/* Read the workspace. */
@@ -445,9 +398,80 @@ void FreecellSolver::translate_layout()
             }
 	}
 }
+#endif
 
 MoveHint FreecellSolver::translateMove( const MOVE &m )
 {
+    fcs_move_t move = *(static_cast<fcs_move_t *>(m.ptr));
+    int cards = fcs_move_get_num_cards_in_seq(move);
+    PatPile *from = 0;
+    PatPile *to = 0;
+
+    switch(fcs_move_get_type(move))
+    {
+        case FCS_MOVE_TYPE_STACK_TO_STACK:
+            from = deal->store[fcs_move_get_src_stack(move)];
+            to = deal->store[fcs_move_get_dest_stack(move)];
+            break;
+
+        case FCS_MOVE_TYPE_FREECELL_TO_STACK:
+            from = deal->freecell[fcs_move_get_src_freecell(move)];
+            to = deal->store[fcs_move_get_dest_stack(move)];
+            cards = 1;
+            break;
+
+        case FCS_MOVE_TYPE_FREECELL_TO_FREECELL:
+            from = deal->freecell[fcs_move_get_src_freecell(move)];
+            to = deal->freecell[fcs_move_get_dest_freecell(move)];
+            cards = 1;
+            break;
+
+        case FCS_MOVE_TYPE_STACK_TO_FREECELL:
+            from = deal->store[fcs_move_get_src_stack(move)];
+            to = deal->freecell[fcs_move_get_dest_freecell(move)];
+            cards = 1;
+            break;
+
+        case FCS_MOVE_TYPE_STACK_TO_FOUNDATION:
+            from = deal->store[fcs_move_get_src_stack(move)];
+            cards = 1;
+            to = 0;
+            break;
+
+        case FCS_MOVE_TYPE_FREECELL_TO_FOUNDATION:
+            from = deal->freecell[fcs_move_get_src_freecell(move)];
+            cards = 1;
+            to = 0;
+    }
+    Q_ASSERT(from);
+    Q_ASSERT(cards <= from->cards().count());
+    Q_ASSERT(to || cards == 1);
+    KCard *card = from->cards()[from->cards().count() - cards];
+
+    if (!to)
+    {
+        PatPile *target = 0;
+        PatPile *empty = 0;
+        for (int i = 0; i < 4; ++i) {
+            KCard *c = deal->target[i]->topCard();
+            if (c) {
+                if ( c->suit() == card->suit() )
+                {
+                    target = deal->target[i];
+                    break;
+                }
+            } else if ( !empty )
+                empty = deal->target[i];
+        }
+        to = target ? target : empty;
+    }
+    Q_ASSERT(to);
+
+    delete ((fcs_move_t *)m.ptr);
+
+    return MoveHint(card, to, 0);
+
+#if 0
     // this is tricky as we need to want to build the "meta moves"
 
     PatPile *frompile = 0;
@@ -484,8 +508,51 @@ MoveHint FreecellSolver::translateMove( const MOVE &m )
 
         return MoveHint( card, target, m.pri );
     }
+#endif
 }
 
+void FreecellSolver::translate_layout()
+{
+    if (board_as_string)
+    {
+        ::free(board_as_string);
+        board_as_string = NULL;
+    }
+
+    board_as_string = strdup(deal->solverFormat().toLatin1());
+
+    std::cerr << "translate_layout() : solver_instance = " << solver_instance << std::endl;
+
+    if (solver_instance)
+    {
+        freecell_solver_user_recycle(solver_instance);
+        solver_ret = FCS_STATE_NOT_BEGAN_YET;
+    }
+#if 0
+    /* Read the workspace. */
+    int total = 0;
+
+    for ( int w = 0; w < 10; ++w ) {
+        int i = translate_pile(deal->store[w], W[w], 52);
+        Wp[w] = &W[w][i - 1];
+        Wlen[w] = i;
+        total += i;
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        O[i] = -1;
+        KCard *c = deal->target[i]->top();
+        if (c) {
+            total += 13;
+            O[i] = translateSuit( c->suit() );
+        }
+    }
+#endif
+}
+
+
+
+#if 0
 unsigned int FreecellSolver::getClusterNumber()
 {
     int i = O[0] + (O[1] << 4);
@@ -494,7 +561,9 @@ unsigned int FreecellSolver::getClusterNumber()
     k |= i << 8;
     return k;
 }
+#endif
 
+#if 0
 void FreecellSolver::print_layout()
 {
        int i, t, w, o;
@@ -517,3 +586,4 @@ void FreecellSolver::print_layout()
        }
        fprintf(stderr, "\nprint-layout-end\n");
 }
+#endif

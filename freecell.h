@@ -62,9 +62,17 @@ protected slots:
 private:
     bool canPutStore( const KCardPile * pile, const QList<KCard*> & cards ) const;
 
+    virtual QString solverFormat() const;
+#if 0
+    virtual MoveHint * chooseHint();
+#endif
+
+protected:
     PatPile* store[8];
     PatPile* freecell[4];
     PatPile* target[4];
+    void * solver_instance;
+    int solver_ret;
 
     friend class FreecellSolver;
 };

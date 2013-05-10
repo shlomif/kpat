@@ -11,7 +11,11 @@ if(NOT COMPILING_KDEGAMES)
 	include_directories(${KDEGAMES_INCLUDE_DIRS} ${KDE4_INCLUDES} ${QDBUS_INCLUDE_DIRS})
 endif(NOT COMPILING_KDEGAMES)
 
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/libkcardgame/include )
+include(FindPkgConfig)
+
+pkg_check_modules(FC_SOLVE REQUIRED libfreecell-solver)
+
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/libkcardgame/include ${FC_SOLVE_INCLUDE_DIRS})
 
 add_subdirectory( icons )
 add_subdirectory( libkcardgame )
@@ -21,56 +25,58 @@ add_subdirectory( sounds )
 add_subdirectory( themes )
 add_subdirectory( doc )
 
-set( kpat_SRCS
-    main.cpp
-    dealer.cpp
-    dealerinfo.cpp
-    gameselectionscene.cpp
-    mainwindow.cpp
-    messagebox.cpp
-    numbereddealdialog.cpp
-    patpile.cpp
-    pileutils.cpp
-    renderer.cpp
-    soundengine.cpp
-    statisticsdialog.cpp
-    view.cpp
-    patsolve/memory.cpp
-    patsolve/patsolve.cpp
+set(RELEASE "1")
 
-    clock.cpp 
-    patsolve/clocksolver.cpp
-    fortyeight.cpp
-    patsolve/fortyeightsolver.cpp
-    freecell.cpp 
-    patsolve/freecellsolver.cpp
-    golf.cpp
-    patsolve/golfsolver.cpp
-    grandf.cpp
-    patsolve/grandfsolver.cpp
-    gypsy.cpp
-    patsolve/gypsysolver.cpp
-    idiot.cpp
-    patsolve/idiotsolver.cpp
-    klondike.cpp
-    patsolve/klondikesolver.cpp
-    mod3.cpp
-    patsolve/mod3solver.cpp
-    simon.cpp
-    patsolve/simonsolver.cpp
-    spider.cpp
-    patsolve/spidersolver.cpp
-    yukon.cpp
-    patsolve/yukonsolver.cpp
+set(kpat_SRCS ${libfcs_SRCS}
+   clock.cpp
+   dealer.cpp
+   dealerinfo.cpp
+   fortyeight.cpp
+   freecell.cpp
+   freecell.cpp
+   gameselectionscene.cpp
+   golf.cpp
+   grandf.cpp
+   gypsy.cpp
+   idiot.cpp
+   klondike.cpp
+   main.cpp
+   mainwindow.cpp
+   messagebox.cpp
+   mod3.cpp
+   numbereddealdialog.cpp
+   patpile.cpp
+   patsolve/abstract_fc_solve_solver.cpp
+   patsolve/clocksolver.cpp
+   patsolve/fortyeightsolver.cpp
+   patsolve/freecellsolver.cpp
+   patsolve/golfsolver.cpp
+   patsolve/grandfsolver.cpp
+   patsolve/gypsysolver.cpp
+   patsolve/idiotsolver.cpp
+   patsolve/klondikesolver.cpp
+   patsolve/memory.cpp
+   patsolve/mod3solver.cpp
+   patsolve/patsolve.cpp
+   patsolve/simonsolver.cpp
+   patsolve/spidersolver.cpp
+   patsolve/yukonsolver.cpp
+   pileutils.cpp
+   renderer.cpp
+   simon.cpp
+   spider.cpp
+   soundengine.cpp
+   statisticsdialog.cpp
+   view.cpp
+   yukon.cpp
 )
 
 kde4_add_ui_files( kpat_SRCS statisticsdialog.ui )
 kde4_add_kcfg_files( kpat_SRCS settings.kcfgc )
 kde4_add_app_icon( kpat_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/icons/hi*-app-kpat.png" )
 kde4_add_executable( kpat ${kpat_SRCS} )
-target_link_libraries( kpat kcardgame kdegames ${KDE4_KIO_LIBS} ${KDE4_PHONON_LIBS} )
+target_link_libraries( kpat kcardgame kdegames ${KDE4_KIO_LIBS} ${KDE4_PHONON_LIBS} ${FC_SOLVE_LIBRARIES} )
 install( TARGETS kpat ${INSTALL_TARGETS_DEFAULT_ARGS} )
-
 
 ########### install files ###############
 

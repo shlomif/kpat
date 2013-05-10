@@ -35,6 +35,12 @@
  * -------------------------------------------------------------------------
  */
 
+#if 0
+// TODO : Remove these includes later.
+#include "freecell-solver/fcs_user.h"
+#include "freecell-solver/fcs_cl.h"
+#endif
+
 #include "freecell.h"
 
 #include "dealerinfo.h"
@@ -112,6 +118,215 @@ void Freecell::restart( const QList<KCard*> & cards )
 
     startDealAnimation();
 }
+
+int getDeck(KCardDeck::Suit suit)
+{
+    switch (suit) {
+        case KCardDeck::Hearts:
+            return 0;
+        case KCardDeck::Spades:
+            return 1;
+        case KCardDeck::Diamonds:
+            return 2;
+        case KCardDeck::Clubs:
+            return 3;
+        default:
+            exit(-1);
+    }
+    return 0;
+}
+
+#if 0
+void Freecell::findSolution()
+{
+    kDebug(11111) << "findSolution\n";
+
+    QString output = solverFormat();
+    kDebug(11111) << output << endl;
+
+    resumeSolution();
+}
+#endif
+
+#if 0
+void Freecell::resumeSolution()
+{
+#if 0
+    if (!solver_instance)
+        return;
+
+#if 0
+    emit gameInfo(i18n("%1 tries - depth %2",
+                   freecell_solver_user_get_num_times(solver_instance),
+                   freecell_solver_user_get_current_depth(solver_instance)));
+#endif
+
+    if (solver_ret == FCS_STATE_WAS_SOLVED)
+    {
+#if 0
+        emit gameInfo(i18n("solved after %1 tries",
+                      freecell_solver_user_get_num_times(
+                          solver_instance)));
+#endif
+        kDebug(11111) << "solved\n";
+        DealerScene::demo();
+        return;
+    }
+    if (solver_ret == FCS_STATE_IS_NOT_SOLVEABLE) {
+#if 0
+	int moves = freecell_solver_user_get_num_times(solver_instance);
+#endif
+        freeSolution();
+#if 0
+        emit gameInfo(i18n("unsolved after %1 moves",
+                       moves));
+#endif
+        stopDemo();
+        return;
+    }
+
+    unsigned int max_iters = freecell_solver_user_get_limit_iterations(
+        solver_instance) + CHUNKSIZE;
+    freecell_solver_user_limit_iterations(solver_instance,
+                                          max_iters);
+
+    if (max_iters > 120000) {
+        solver_ret = FCS_STATE_IS_NOT_SOLVEABLE;
+        resumeSolution();
+        return;
+    }
+
+    solver_ret = freecell_solver_user_resume_solution(solver_instance);
+    QTimer::singleShot(0, this, SLOT(resumeSolution()));
+#endif
+}
+#endif
+
+QString Freecell::solverFormat() const
+{
+    QString output;
+    QString tmp;
+    for (int i = 0; i < 4 ; i++) {
+        if (target[i]->isEmpty())
+            continue;
+        tmp += suitToString(target[i]->topCard()->suit()) + '-' + rankToString(target[i]->topCard()->rank()) + ' ';
+    }
+    if (!tmp.isEmpty())
+        output += QString::fromLatin1("Foundations: %1\n").arg(tmp);
+
+    tmp.truncate(0);
+    for (int i = 0; i < 4 ; i++) {
+        if (freecell[i]->isEmpty())
+            tmp += "- ";
+        else
+            tmp += rankToString(freecell[i]->topCard()->rank()) + suitToString(freecell[i]->topCard()->suit()) + ' ';
+    }
+    if (!tmp.isEmpty())
+    {
+        QString a = QString::fromLatin1("Freecells: %1\n");
+        kDebug(11111) << "a is {{{{" << a << "}}}}" << endl;
+        output += a.arg(tmp);
+    }
+
+    for (int i = 0; i < 8 ; i++)
+    {
+        QList<KCard*> cards = store[i]->cards();
+        for (QList<KCard*>::ConstIterator it = cards.begin(); it != cards.end(); ++it)
+            output += rankToString((*it)->rank()) + suitToString((*it)->suit()) + ' ';
+        output += '\n';
+    }
+    {
+        kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
+    }
+    return output;
+}
+
+#if 0
+//  Idea stolen from klondike.cpp
+//
+//  This function returns true when it is certain that the card t is no longer
+//  needed on any of the play piles.
+//
+//  To determine wether a card is no longer needed on any of the play piles we
+//  obviously must know what a card can be used for there. According to the
+//  rules a card can be used to store another card with 1 less unit of value
+//  and opposite color. This is the only thing that a card can be used for
+//  there. Therefore the cards with lowest value (1) are useless there (base
+//  case). The other cards each have 2 cards that can be stored on them, let us
+//  call those 2 cards *depending cards*.
+//
+//  The object of the game is to put all cards on the target piles. Therefore
+//  cards that are no longer needed on any of the play piles should be put on
+//  the target piles if possible. Cards on the target piles can not be moved
+//  and they can not store any of its depending cards. Let us call this that
+//  the cards on the target piles are *out of play*.
+//
+//  The simple and obvious rule is:
+//    A card is no longer needed when both of its depending cards are out of
+//    play.
+//
+//  More complex:
+//    Assume card t is red.  Now, if the lowest unplayed black card is
+//    t.value()-2, then t may be needed to hold that black t.value()-1 card.
+//    If the lowest unplayed black card is t.value()-1, it will be playable
+//    to the target, unless it is needed for a red card of value t.value()-2.
+//
+//  So, t is not needed if the lowest unplayed red card is t.value()-2 and the
+//  lowest unplayed black card is t.value()-1, OR if the lowest unplayed black
+//  card is t.value().  So, no recursion needed - we did it ahead of time.
+
+bool Freecell::noLongerNeeded(const Card & t)
+{
+
+    if (t.rank() <= Card::Two) return true; //  Base case.
+
+    bool cardIsRed = t.isRed();
+
+    int numSame = 0, numDiff = 0;
+    Card::Rank lowSame = Card::King, lowDiff = Card::King;
+    for (PileList::Iterator it = target.begin(); it != target.end(); ++it)
+    {
+        if ((*it)->isEmpty())
+            continue;
+        if ((*it)->top()->isRed() == cardIsRed) {
+            numSame++;
+            if ((*it)->top()->rank() < lowSame)
+                lowSame = static_cast<Card::Rank>((*it)->top()->rank()+1);
+        } else {
+            numDiff++;
+            if ((*it)->top()->rank() < lowDiff)
+                lowDiff = static_cast<Card::Rank>((*it)->top()->rank()+1);
+        }
+    }
+    if (numSame < target.count()/2) lowSame = Card::Ace;
+    if (numDiff < target.count()/2) lowDiff = Card::Ace;
+
+    return (lowDiff >= t.rank() ||
+        (lowDiff >= t.rank()-1 && lowSame >= t.rank()-2));
+}
+#endif
+
+#if 0
+MoveHint *Freecell::chooseHint()
+{
+    return NULL;
+#if 0
+    if (solver_instance && freecell_solver_user_get_moves_left(solver_instance)) {
+#if 0
+        emit gameInfo(i18n("%1 moves before finish", freecell_solver_user_get_moves_left(solver_instance)));
+#endif
+        fcs_move_t move;
+        if (!freecell_solver_user_get_next_move(solver_instance, &move)) {
+            MoveHint *mh = translateMove(&move);
+            oldmoves.append(mh);
+            return mh;
+        } else
+            return 0;
+    } else
+        return DealerScene::chooseHint();
+#endif
+}
+#endif
 
 
 void Freecell::cardsDroppedOnPile( const QList<KCard*> & cards, KCardPile * pile )
