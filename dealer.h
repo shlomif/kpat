@@ -54,9 +54,9 @@ class SolverThread;
 #include "KCardScene"
 
 class QAction;
-#include <QtCore/QMap>
-#include <QtCore/QStack>
-#include <QtCore/QTimer>
+#include <QMap>
+#include <QStack>
+#include <QTimer>
 class QDomDocument;
 
 
@@ -67,12 +67,12 @@ class DealerScene : public KCardScene
 public:
     enum { None = 0, Hint = 1, Demo = 2, Draw = 4, Deal = 8, Redeal = 16 } Actions;
 
-    DealerScene( const DealerInfo * di );
+    explicit DealerScene( const DealerInfo * di );
     ~DealerScene();
 
     virtual void initialize() = 0;
 
-    virtual void relayoutScene();
+    void relayoutScene() Q_DECL_OVERRIDE;
     void updateWonItem();
 
     void addPatPile( PatPile * pile );
@@ -149,20 +149,21 @@ public slots:
     void stop();
 
     void drawDealRowOrRedeal();
+    virtual bool tryAutomaticMove( KCard * card );
 
 protected:
-    virtual bool allowedToAdd(const KCardPile * pile, const QList<KCard*> & cards) const;
-    virtual bool allowedToRemove(const KCardPile * pile, const KCard * card) const;
+    bool allowedToAdd(const KCardPile * pile, const QList<KCard*> & cards) const Q_DECL_OVERRIDE;
+    bool allowedToRemove(const KCardPile * pile, const KCard * card) const Q_DECL_OVERRIDE;
 
     virtual bool checkAdd( const PatPile * pile, const QList<KCard*> & oldCards, const QList<KCard*> & newCards ) const;
     virtual bool checkRemove( const PatPile * pile, const QList<KCard*> & cards ) const;
     virtual bool checkPrefering( const PatPile * pile, const QList<KCard*> & oldCards, const QList<KCard*> & newCards ) const;
 
-    virtual void cardsMoved( const QList<KCard*> & cards, KCardPile * oldPile, KCardPile * newPile );
+    void cardsMoved( const QList<KCard*> & cards, KCardPile * oldPile, KCardPile * newPile ) Q_DECL_OVERRIDE;
 
-    virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * mouseEvent );
-    virtual void mousePressEvent( QGraphicsSceneMouseEvent * mouseEvent );
-    virtual void mouseReleaseEvent( QGraphicsSceneMouseEvent * mouseEvent );
+    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * mouseEvent ) Q_DECL_OVERRIDE;
+    void mousePressEvent( QGraphicsSceneMouseEvent * mouseEvent ) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent * mouseEvent ) Q_DECL_OVERRIDE;
 
     virtual void restart( const QList<KCard*> & cards ) = 0;
 
@@ -200,7 +201,6 @@ protected slots:
     virtual void animationDone();
     virtual bool newCards();
     virtual bool drop();
-    virtual bool tryAutomaticMove( KCard * card );
 
 private slots:
     void stopAndRestartSolver();

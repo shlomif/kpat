@@ -40,10 +40,11 @@
 #include "kabstractcarddeck.h"
 #include "kcardpile.h"
 
-#include <KDebug>
+#include <QDebug>
 
-#include <QtGui/QGraphicsSceneWheelEvent>
-#include <QtGui/QPainter>
+#include <QGraphicsSceneWheelEvent>
+#include <QPainter>
+#include <QPointer>
 
 #include <cmath>
 
@@ -71,6 +72,19 @@ namespace
             pile->setHighlighted( highlight );
             return;
         }
+    }
+
+    QGraphicsItem * toGraphicsItem( QObject * object )
+    {
+        if ( KCard * card = qobject_cast<KCard*>( object ) )
+            return card;
+
+        if ( KCardPile * pile = qobject_cast<KCardPile*>( object ) )
+            return pile;
+
+        Q_ASSERT( object == 0 );
+
+        return 0;
     }
 }
 
@@ -104,7 +118,7 @@ public:
     bool keyboardMode;
     int keyboardPileIndex;
     int keyboardCardIndex;
-    QWeakPointer<QGraphicsItem> keyboardFocusItem;
+    QPointer<QObject> keyboardFocusItem;
 
     bool sizeHasBeenSet;
 };
@@ -342,7 +356,7 @@ void KCardScenePrivate::changeFocus( int pileChange, int cardChange )
 
 void KCardScenePrivate::updateKeyboardFocus()
 {
-    setItemHighlight( keyboardFocusItem.data(), false );
+    setItemHighlight( toGraphicsItem( keyboardFocusItem ), false );
 
     if ( !keyboardMode )
     {
@@ -379,10 +393,13 @@ void KCardScenePrivate::updateKeyboardFocus()
         keyboardFocusItem = pile->at( keyboardCardIndex );
     }
 
-    setItemHighlight( keyboardFocusItem.data(), true );
+    QGraphicsItem * focusItem = toGraphicsItem( keyboardFocusItem );
+    Q_ASSERT( focusItem );
 
-    QPointF delta = keyboardFocusItem.data()->pos() - startOfDrag;
-    startOfDrag = keyboardFocusItem.data()->pos();
+    setItemHighlight( focusItem, true );
+
+    QPointF delta = focusItem->pos() - startOfDrag;
+    startOfDrag = focusItem->pos();
     foreach ( KCard * c, cardsBeingDragged )
         c->setPos( c->pos() + delta );
 }
@@ -418,12 +435,12 @@ KCardScene::~KCardScene()
 void KCardScene::setDeck( KAbstractCardDeck * deck )
 {
     if ( d->deck )
-        disconnect( d->deck, SIGNAL(cardAnimationDone()), this, SIGNAL(cardAnimationDone()) );
+        disconnect( d->deck, &KAbstractCardDeck::cardAnimationDone, this, &KCardScene::cardAnimationDone );
 
     d->deck = deck;
 
     if ( d->deck )
-        connect( d->deck, SIGNAL(cardAnimationDone()), this, SIGNAL(cardAnimationDone()) );
+        connect( d->deck, &KAbstractCardDeck::cardAnimationDone, this, &KCardScene::cardAnimationDone );
 }
 
 
@@ -1027,7 +1044,8 @@ void KCardScene::mousePressEvent( QGraphicsSceneMouseEvent * e )
     if ( isKeyboardModeActive() )
         setKeyboardModeActive( false );
 
-    QGraphicsItem * item = itemAt( e->scenePos() );
+    const QList<QGraphicsItem *> itemsAtPoint = items( e->scenePos() );
+    QGraphicsItem * item = itemsAtPoint.isEmpty() ? 0 : itemsAtPoint.first();
     KCard * card = qgraphicsitem_cast<KCard*>( item );
     KCardPile * pile = qgraphicsitem_cast<KCardPile*>( item );
 
@@ -1113,7 +1131,8 @@ void KCardScene::mouseMoveEvent( QGraphicsSceneMouseEvent * e )
 
 void KCardScene::mouseReleaseEvent( QGraphicsSceneMouseEvent * e )
 {
-    QGraphicsItem * topItem = itemAt( e->scenePos() );
+    const QList<QGraphicsItem *> itemsAtPoint = items( e->scenePos() );
+    QGraphicsItem * topItem = itemsAtPoint.isEmpty() ? 0 : itemsAtPoint.first();
     KCard * card = qgraphicsitem_cast<KCard*>( topItem );
     KCardPile * pile = qgraphicsitem_cast<KCardPile*>( topItem );
 
@@ -1175,7 +1194,8 @@ void KCardScene::mouseReleaseEvent( QGraphicsSceneMouseEvent * e )
 
 void KCardScene::mouseDoubleClickEvent( QGraphicsSceneMouseEvent * e )
 {
-    QGraphicsItem * topItem = itemAt( e->scenePos() );
+    const QList<QGraphicsItem *> itemsAtPoint = items( e->scenePos() );
+    QGraphicsItem * topItem = itemsAtPoint.isEmpty() ? 0 : itemsAtPoint.first();
     KCard * card = qgraphicsitem_cast<KCard*>( topItem );
     KCardPile * pile = qgraphicsitem_cast<KCardPile*>( topItem );
 
@@ -1257,4 +1277,4 @@ void KCardScene::drawForeground ( QPainter * painter, const QRectF & rect )
 }
 
 
-#include "kcardscene.moc"
+

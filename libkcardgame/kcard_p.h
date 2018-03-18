@@ -24,7 +24,7 @@
 class KAbstractCardDeck;
 class KCardPile;
 
-#include <QtCore/QAbstractAnimation>
+#include <QAbstractAnimation>
 class QPropertyAnimation;
 
 
@@ -32,8 +32,8 @@ class KCardAnimation : public QAbstractAnimation
 {
 public:
     KCardAnimation( KCardPrivate * d, int duration, QPointF pos, qreal rotation, bool faceUp );
-    int duration() const;
-    void updateCurrentTime( int msec );
+    int duration() const Q_DECL_OVERRIDE;
+    void updateCurrentTime( int msec ) Q_DECL_OVERRIDE;
 
 private:
     KCardPrivate * d;
@@ -61,7 +61,7 @@ class KCardPrivate : public QObject
     Q_PROPERTY( qreal highlightedness READ highlightedness WRITE setHighlightedness )
 
 public:
-    KCardPrivate( KCard * card );
+    explicit KCardPrivate( KCard * card );
 
     void setFlippedness( qreal flippedness );
     qreal flippedness() const;

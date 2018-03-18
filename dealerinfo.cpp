@@ -37,8 +37,7 @@
 
 #include "dealerinfo.h"
 
-#include <KGlobal>
-#include <KLocale>
+#include <KLocalizedString>
 
 
 DealerInfo::DealerInfo( const QByteArray & untranslatedBaseName, int baseId )
@@ -132,7 +131,7 @@ public:
     DealerInfoList instance;
 };
 
-K_GLOBAL_STATIC( DealerInfoListPrivate, dilp )
+Q_GLOBAL_STATIC( DealerInfoListPrivate, dilp )
 
 
 

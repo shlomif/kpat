@@ -48,8 +48,8 @@
 #include "speeds.h"
 #include "patsolve/freecellsolver.h"
 
-#include <KDebug>
-#include <KLocale>
+#include <QDebug>
+#include <KLocalizedString>
 
 
 const int CHUNKSIZE = 100;
@@ -71,7 +71,7 @@ void Freecell::initialize()
 
     for ( int i = 0; i < 4; ++i )
     {
-        freecell[i] = new PatPile ( this, 1 + 8 + i, QString( "freecell%1" ).arg( i ) );
+        freecell[i] = new PatPile ( this, 1 + 8 + i, QStringLiteral( "freecell%1" ).arg( i ) );
         freecell[i]->setPileRole(PatPile::Cell);
         freecell[i]->setLayoutPos(topRowDist * i, 0);
         freecell[i]->setKeyboardSelectHint( KCardPile::AutoFocusTop );
@@ -80,7 +80,7 @@ void Freecell::initialize()
 
     for ( int i = 0; i < 8; ++i )
     {
-        store[i] = new PatPile( this, 1 + i, QString( "store%1" ).arg( i ) );
+        store[i] = new PatPile( this, 1 + i, QStringLiteral( "store%1" ).arg( i ) );
         store[i]->setPileRole(PatPile::Tableau);
         store[i]->setLayoutPos( bottomRowDist * i, 1.3 );
         store[i]->setBottomPadding( 2.5 );
@@ -91,7 +91,7 @@ void Freecell::initialize()
 
     for ( int i = 0; i < 4; ++i )
     {
-        target[i] = new PatPile(this, 1 + 8 + 4 + i, QString( "target%1" ).arg( i ));
+        target[i] = new PatPile(this, 1 + 8 + 4 + i, QStringLiteral( "target%1" ).arg( i ));
         target[i]->setPileRole(PatPile::Foundation);
         target[i]->setLayoutPos(targetOffsetDist + topRowDist * i, 0);
         target[i]->setSpread(0, 0);
@@ -483,11 +483,11 @@ public:
       : DealerInfo(I18N_NOOP("Freecell"), FreecellId)
     {}
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Freecell( this );
     }
 } freecellDealerInfo;
 
 
-#include "freecell.moc"
+

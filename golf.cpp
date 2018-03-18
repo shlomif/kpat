@@ -40,7 +40,7 @@
 #include "speeds.h"
 #include "patsolve/golfsolver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 
 
 Golf::Golf( const DealerInfo * di )
@@ -56,15 +56,15 @@ void Golf::initialize()
 
     setDeckContents();
 
-    talon = new PatPile( this, 0, "talon" );
+    talon = new PatPile( this, 0, QStringLiteral("talon") );
     talon->setPileRole(PatPile::Stock);
     talon->setLayoutPos(0, smallNeg);
     talon->setSpread(0, 0);
     talon->setKeyboardSelectHint( KCardPile::NeverFocus );
     talon->setKeyboardDropHint( KCardPile::NeverFocus );
-    connect( talon, SIGNAL(clicked(KCard*)), SLOT(drawDealRowOrRedeal()) );
+    connect( talon, &KCardPile::clicked, this, &DealerScene::drawDealRowOrRedeal );
 
-    waste = new PatPile( this, 8, "waste" );
+    waste = new PatPile( this, 8, QStringLiteral("waste") );
     waste->setPileRole(PatPile::Foundation);
     waste->setLayoutPos(1.1, smallNeg);
     waste->setSpread(0.12, 0);
@@ -75,7 +75,7 @@ void Golf::initialize()
 
     for( int r = 0; r < 7; ++r )
     {
-        stack[r] = new PatPile( this, 1 + r, QString("stack%1").arg(r) );
+        stack[r] = new PatPile( this, 1 + r, QStringLiteral("stack%1").arg(r) );
         stack[r]->setPileRole(PatPile::Tableau);
         stack[r]->setLayoutPos(r*dist_x,0);
         // Manual tweak of the pile z values to make some animations better.
@@ -89,7 +89,7 @@ void Golf::initialize()
     setActions(DealerScene::Hint | DealerScene::Demo | DealerScene::Draw);
     setSolver( new GolfSolver( this ) );
 
-    connect( this, SIGNAL(cardClicked(KCard*)), this, SLOT(tryAutomaticMove(KCard*)) );
+    connect( this, &KCardScene::cardClicked, this, &DealerScene::tryAutomaticMove );
 }
 
 
@@ -177,11 +177,11 @@ public:
       : DealerInfo(I18N_NOOP("Golf"), GolfId)
     {}
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Golf( this );
     }
 } golfDealerInfo;
 
 
-#include "golf.moc"
+

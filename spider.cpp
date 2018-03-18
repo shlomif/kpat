@@ -43,7 +43,7 @@
 #include "speeds.h"
 #include "patsolve/spidersolver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 #include <KRandom>
 #include <KSelectAction>
 
@@ -57,7 +57,7 @@ public:
     };
 
 protected:
-    virtual void paintGraphic( QPainter * painter, qreal highlightedness )
+    void paintGraphic( QPainter * painter, qreal highlightedness ) Q_DECL_OVERRIDE
     {
         Q_UNUSED( painter );
         Q_UNUSED( highlightedness );
@@ -81,26 +81,28 @@ void Spider::initialize()
 
     m_suits = Settings::spiderSuitCount();
 
+    m_stackFaceup = Settings::spiderStackFaceup();
+
     createDeck();
 
     // Dealing the cards out into 5 piles so the user can see how many
     // sets of 10 cards are left to be dealt out
     for( int column = 0; column < 5; ++column )
     {
-        redeals[column] = new InvisiblePile( this, column + 1, QString( "redeals%1" ).arg( column ) );
+        redeals[column] = new InvisiblePile( this, column + 1, QStringLiteral( "redeals%1" ).arg( column ) );
         redeals[column]->setPileRole(PatPile::Stock);
         redeals[column]->setLayoutPos( dist_x * (9 - (4.0 - column) / 3), smallNeg );
         redeals[column]->setZValue(12 * ( 5-column ));
         redeals[column]->setSpread(0, 0);
         redeals[column]->setKeyboardSelectHint( KCardPile::NeverFocus );
         redeals[column]->setKeyboardDropHint( KCardPile::NeverFocus );
-        connect( redeals[column], SIGNAL(clicked(KCard*)), SLOT(drawDealRowOrRedeal()) );
+        connect( redeals[column], &KCardPile::clicked, this, &DealerScene::drawDealRowOrRedeal );
     }
 
     // The 10 playing piles
     for( int column = 0; column < 10; ++column )
     {
-        stack[column] = new PatPile( this, column + 6, QString( "stack%1" ).arg( column ) );
+        stack[column] = new PatPile( this, column + 6, QStringLiteral( "stack%1" ).arg( column ) );
         stack[column]->setPileRole(PatPile::Tableau);
         stack[column]->setLayoutPos(dist_x * column, 0);
         stack[column]->setZValue(20);
@@ -115,7 +117,7 @@ void Spider::initialize()
     // else the name Spider?
     for( int column = 0; column < 8; ++column )
     {
-        legs[column] = new InvisiblePile( this, column + 16, QString( "legs%1" ).arg( column ) );
+        legs[column] = new InvisiblePile( this, column + 16, QStringLiteral( "legs%1" ).arg( column ) );
         legs[column]->setPileRole(PatPile::Foundation);
         legs[column]->setLayoutPos(dist_x / 3 * column, smallNeg);
         legs[column]->setZValue(column+1);
@@ -142,13 +144,20 @@ void Spider::initialize()
         options->setCurrentItem( 1 );
     else
         options->setCurrentItem( 2 );
-    connect( options, SIGNAL(triggered(int)), SLOT(gameTypeChanged()) );
+    connect(options, static_cast<void (KSelectAction::*)(int)>(&KSelectAction::triggered), this, &Spider::gameTypeChanged);
+
+    m_stackFaceupOption = new KSelectAction(i18n("S&tack Options"), this );
+    m_stackFaceupOption->addAction( i18n("Face &Down (harder)") );
+    m_stackFaceupOption->addAction( i18n("Face &Up (easier)") );
+    m_stackFaceupOption->setCurrentItem( m_stackFaceup );
+
+    connect(m_stackFaceupOption, static_cast<void (KSelectAction::*)(int)>(&KSelectAction::triggered), this, &Spider::gameTypeChanged);
 }
 
 
 QList<QAction*> Spider::configActions() const
 {
-    return QList<QAction*>() << options;
+    return QList<QAction*>() << options << m_stackFaceupOption;
 }
 
 
@@ -164,6 +173,12 @@ void Spider::gameTypeChanged()
             setSuits( 2 );
         else
             setSuits( 4 );
+
+        if ( m_stackFaceup != m_stackFaceupOption->currentItem() ) {
+            m_stackFaceup = m_stackFaceupOption->currentItem();
+            Settings::setSpiderStackFaceup( m_stackFaceup );
+        }
+
         startNew( gameNumber() );
     }
     else
@@ -176,6 +191,8 @@ void Spider::gameTypeChanged()
             options->setCurrentItem( 1 );
         else
             options->setCurrentItem( 2 );
+
+        m_stackFaceupOption->setCurrentItem( m_stackFaceup );
     }
 }
 
@@ -309,7 +326,7 @@ void Spider::restart( const QList<KCard*> & cards )
     // deal face down cards (5 to first 4 piles, 4 to last 6)
     for ( int i = 0; i < 44; ++i )
     {
-        addCardForDeal( stack[column], cardList.takeLast(), false, randomPos() );
+        addCardForDeal( stack[column], cardList.takeLast(), m_stackFaceup == 1, randomPos() );
         column = (column + 1) % 10;
     }
     // deal face up cards, one to each pile
@@ -484,11 +501,11 @@ public:
         addSubtype( SpiderFourSuitId, I18N_NOOP( "Spider (4 Suit)" ) );
     }
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Spider( this );
     }
 } spideDealerInfo;
 
 
-#include "spider.moc"
+

@@ -44,16 +44,16 @@ class Clock : public DealerScene
     Q_OBJECT
 
 public:
-    Clock( const DealerInfo * di );
-    virtual void initialize();
+    explicit Clock( const DealerInfo * di );
+    void initialize() Q_DECL_OVERRIDE;
 
 protected:
-    virtual bool checkAdd(const PatPile * pile, const QList<KCard*> & oldCards, const QList<KCard*> & newCards) const;
-    virtual bool checkRemove(const PatPile* pile, const QList<KCard*> & cards) const;
-    virtual void restart( const QList<KCard*> & cards );
+    bool checkAdd(const PatPile * pile, const QList<KCard*> & oldCards, const QList<KCard*> & newCards) const Q_DECL_OVERRIDE;
+    bool checkRemove(const PatPile* pile, const QList<KCard*> & cards) const Q_DECL_OVERRIDE;
+    void restart( const QList<KCard*> & cards ) Q_DECL_OVERRIDE;
 
 protected slots:
-    virtual bool drop();
+    bool drop() Q_DECL_OVERRIDE;
 
 private:
     PatPile* store[8];

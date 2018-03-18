@@ -41,15 +41,17 @@
 #include "version.h"
 
 #include <KConfigGroup>
-#include <KDebug>
-#include <KGlobal>
-#include <KLocale>
-
-#include <QtCore/QList>
+#include <QDebug>
+#include <KLocalizedString>
+#include <KSharedConfig>
+#include <QList>
+#include <QDialogButtonBox>
+#include <QPushButton>
+#include <QVBoxLayout>
 
 
 StatisticsDialog::StatisticsDialog(QWidget* aParent)
-	: KDialog(aParent),
+	: QDialog(aParent),
 	  indexToIdMap()
 {
 	QWidget* widget = new QWidget(this);
@@ -57,9 +59,15 @@ StatisticsDialog::StatisticsDialog(QWidget* aParent)
 	ui->setupUi(widget);
 
 	setWindowTitle(i18n("Statistics"));
-	setMainWidget(widget);
-	setButtons(KDialog::Reset | KDialog::Close);
-	setDefaultButton(KDialog::Close);
+	
+        QVBoxLayout *mainLayout = new QVBoxLayout;
+	setLayout(mainLayout);
+	mainLayout->addWidget(widget);
+	QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close|QDialogButtonBox::Reset);
+	connect(buttonBox, &QDialogButtonBox::accepted, this, &StatisticsDialog::accept);
+	connect(buttonBox, &QDialogButtonBox::rejected, this, &StatisticsDialog::reject);
+	mainLayout->addWidget(buttonBox);
+	buttonBox->button(QDialogButtonBox::Close)->setDefault(true);
 
 
 	QMap<QString,int> nameToIdMap;
@@ -81,8 +89,8 @@ StatisticsDialog::StatisticsDialog(QWidget* aParent)
 
 	showGameType(indexToIdMap[0]);
 
-	connect(ui->GameType, SIGNAL(activated(int)), SLOT(selectionChanged(int)));
-	connect(this, SIGNAL(resetClicked()), SLOT(resetStats()));
+	connect(ui->GameType, static_cast<void (KComboBox::*)(int)>(&KComboBox::activated), this, &StatisticsDialog::selectionChanged);
+	connect(buttonBox->button(QDialogButtonBox::Reset), &QPushButton::clicked, this, &StatisticsDialog::resetStats);
 }
 
 StatisticsDialog::~StatisticsDialog()
@@ -105,17 +113,17 @@ void StatisticsDialog::showGameType(int gameIndex)
 
 void StatisticsDialog::setGameType(int gameIndex)
 {
-	KConfigGroup cg(KGlobal::config(), scores_group);
-	unsigned int t = cg.readEntry(QString("total%1").arg(gameIndex),0);
+	KConfigGroup cg(KSharedConfig::openConfig(), scores_group);
+	unsigned int t = cg.readEntry(QStringLiteral("total%1").arg(gameIndex),0);
 	ui->Played->setText(QString::number(t));
-	unsigned int w = cg.readEntry(QString("won%1").arg(gameIndex),0);
+	unsigned int w = cg.readEntry(QStringLiteral("won%1").arg(gameIndex),0);
 	if (t)
 		ui->Won->setText(i18n("%1 (%2%)", w, w*100/t));
 	else
 		ui->Won->setText( QString::number(w));
-	ui->WinStreak->setText( QString::number( cg.readEntry(QString("maxwinstreak%1").arg(gameIndex), 0)));
-	ui->LoseStreak->setText( QString::number( cg.readEntry(QString("maxloosestreak%1").arg(gameIndex), 0)));
-	unsigned int l = cg.readEntry(QString("loosestreak%1").arg(gameIndex),0);
+	ui->WinStreak->setText( QString::number( cg.readEntry(QStringLiteral("maxwinstreak%1").arg(gameIndex), 0)));
+	ui->LoseStreak->setText( QString::number( cg.readEntry(QStringLiteral("maxloosestreak%1").arg(gameIndex), 0)));
+	unsigned int l = cg.readEntry(QStringLiteral("loosestreak%1").arg(gameIndex),0);
 	if (l)
 		ui->CurrentStreak->setText( i18np("1 loss", "%1 losses", l) );
 	else
@@ -127,18 +135,18 @@ void StatisticsDialog::resetStats()
 {
 	int gameIndex = indexToIdMap[ui->GameType->currentIndex()];
 	Q_ASSERT(gameIndex >= 0);
-	KConfigGroup cg(KGlobal::config(), scores_group);
-	cg.writeEntry(QString("total%1").arg(gameIndex),0);
-	cg.writeEntry(QString("won%1").arg(gameIndex),0);
-	cg.writeEntry(QString("maxwinstreak%1").arg(gameIndex),0);
-	cg.writeEntry(QString("maxloosestreak%1").arg(gameIndex),0);
-	cg.writeEntry(QString("loosestreak%1").arg(gameIndex),0);
-	cg.writeEntry(QString("winstreak%1").arg(gameIndex),0);
+	KConfigGroup cg(KSharedConfig::openConfig(), scores_group);
+	cg.writeEntry(QStringLiteral("total%1").arg(gameIndex),0);
+	cg.writeEntry(QStringLiteral("won%1").arg(gameIndex),0);
+	cg.writeEntry(QStringLiteral("maxwinstreak%1").arg(gameIndex),0);
+	cg.writeEntry(QStringLiteral("maxloosestreak%1").arg(gameIndex),0);
+	cg.writeEntry(QStringLiteral("loosestreak%1").arg(gameIndex),0);
+	cg.writeEntry(QStringLiteral("winstreak%1").arg(gameIndex),0);
 	cg.sync();
 
 	setGameType(gameIndex);
 }
 
-#include "statisticsdialog.moc"
+
 
 // kate: replace-tabs off; replace-tabs-save off

@@ -18,9 +18,9 @@
 
 #include "memory.h"
 
-#include <KDebug>
+#include <QDebug>
 
-#include <QtCore/QtGlobal>
+#include <QtGlobal>
 
 #include <cstdlib>
 #include <cstring>

@@ -26,16 +26,19 @@ class Freecell;
 class FreecellSolver : public FcSolveSolver
 {
 public:
-    FreecellSolver(const Freecell *dealer);
+    explicit FreecellSolver(const Freecell *dealer);
 #if 0
     int good_automove(int o, int r);
-    virtual bool isWon();
-    virtual void make_move(MOVE *m);
-    virtual void undo_move(MOVE *m);
-    virtual void prioritize(MOVE *mp0, int n);
-    virtual int getOuts();
-    virtual unsigned int getClusterNumber();
-    virtual int get_possible_moves(int *a, int *numout);
+    int get_possible_moves(int *a, int *numout) Q_DECL_OVERRIDE;
+    bool isWon() Q_DECL_OVERRIDE;
+    void make_move(MOVE *m) Q_DECL_OVERRIDE;
+    void undo_move(MOVE *m) Q_DECL_OVERRIDE;
+    void prioritize(MOVE *mp0, int n) Q_DECL_OVERRIDE;
+    int getOuts() Q_DECL_OVERRIDE;
+    unsigned int getClusterNumber() Q_DECL_OVERRIDE;
+    void translate_layout() Q_DECL_OVERRIDE;
+    void unpack_cluster( unsigned int k ) Q_DECL_OVERRIDE;
+    MoveHint translateMove(const MOVE &m) Q_DECL_OVERRIDE;
 #endif
     virtual void translate_layout();
 #if 0

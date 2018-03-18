@@ -22,17 +22,18 @@
 #include "renderer.h"
 
 #include <KColorUtils>
-#include <KDebug>
-#include <KLocale>
-#include <KStandardDirs>
+#include <QDebug>
+#include <KLocalizedString>
 
-#include <QtGui/QGraphicsObject>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QPainter>
-#include <QtGui/QStyleOptionGraphicsItem>
-#include <QtCore/QPropertyAnimation>
+
+#include <QGraphicsObject>
+#include <QKeyEvent>
+#include <QPainter>
+#include <QStyleOptionGraphicsItem>
+#include <QPropertyAnimation>
 
 #include <cmath>
+#include <QStandardPaths>
 
 
 namespace
@@ -57,7 +58,7 @@ public:
         m_gameId( id ),
         m_anim( new QPropertyAnimation( this, "fade", this ) ),
         m_highlightFadeAmount( 0 ),
-        m_previewPath( KStandardDirs::locate( "data", QString( "kpat/previews/%1.png" ).arg( id ) ) )
+        m_previewPath( QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral( "kpat/previews/%1.png" ).arg( id ) ) )
     {
         setAcceptHoverEvents( true );
         m_anim->setDuration( hoverTransitionDuration );
@@ -75,7 +76,7 @@ public:
         }
     }
 
-    virtual QRectF boundingRect() const
+    QRectF boundingRect() const Q_DECL_OVERRIDE
     {
         return QRectF( QPointF(), m_size );
     }
@@ -116,19 +117,19 @@ signals:
     void hoverChanged( GameSelectionBox * box, bool hovered );
 
 protected:
-    virtual void mousePressEvent( QGraphicsSceneMouseEvent * event )
+    void mousePressEvent( QGraphicsSceneMouseEvent * event ) Q_DECL_OVERRIDE
     {
         Q_UNUSED( event )
         emit selected( m_gameId );
     }
 
-    virtual void hoverEnterEvent( QGraphicsSceneHoverEvent * event )
+    void hoverEnterEvent( QGraphicsSceneHoverEvent * event ) Q_DECL_OVERRIDE
     {
         Q_UNUSED( event )
         emit hoverChanged( this, true );
     }
 
-    virtual void hoverLeaveEvent( QGraphicsSceneHoverEvent * event )
+    void hoverLeaveEvent( QGraphicsSceneHoverEvent * event ) Q_DECL_OVERRIDE
     {
         Q_UNUSED( event )
         emit hoverChanged( this, false );
@@ -145,7 +146,7 @@ protected:
         update();
     }
 
-    virtual void paint( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 )
+    void paint( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0 ) Q_DECL_OVERRIDE
     {
         Q_UNUSED( option )
         Q_UNUSED( widget )
@@ -157,7 +158,7 @@ protected:
         QRect textRect( 0, 0, m_size.width(), textAreaHeight );
 
         if ( m_highlightFadeAmount < 1 )
-            painter->drawPixmap( 0, 0, r->spritePixmap( "bubble", m_size ) );
+            painter->drawPixmap( 0, 0, r->spritePixmap( QStringLiteral("bubble"), m_size ) );
 
         if ( m_highlightFadeAmount > 0 )
         {
@@ -168,14 +169,14 @@ protected:
                 QPixmap transPix( m_size );
                 transPix.fill( Qt::transparent );
                 QPainter p( &transPix );
-                p.drawPixmap( 0, 0, r->spritePixmap( "bubble_hover", m_size ) );
+                p.drawPixmap( 0, 0, r->spritePixmap( QStringLiteral("bubble_hover"), m_size ) );
                 p.setCompositionMode( QPainter::CompositionMode_DestinationIn );
                 p.fillRect( transPix.rect(), QColor( 0, 0, 0, m_highlightFadeAmount * 255 ) );
                 painter->drawPixmap( 0, 0, transPix );
             }
             else
             {
-                painter->drawPixmap( 0, 0, r->spritePixmap( "bubble_hover", m_size ) );
+                painter->drawPixmap( 0, 0, r->spritePixmap( QStringLiteral("bubble_hover"), m_size ) );
             }
         }
 
@@ -191,8 +192,8 @@ protected:
 
         // Draw label
         painter->setFont( scene()->font() );
-        painter->setPen( KColorUtils::mix( r->colorOfElement( "bubble_text_color" ),
-                                           r->colorOfElement( "bubble_hover_text_color" ), 
+        painter->setPen( KColorUtils::mix( r->colorOfElement( QStringLiteral("bubble_text_color") ),
+                                           r->colorOfElement( QStringLiteral("bubble_hover_text_color") ), 
                                            m_highlightFadeAmount ) );
         painter->drawText( textRect, Qt::AlignCenter, m_label );
     }
@@ -218,8 +219,8 @@ GameSelectionScene::GameSelectionScene( QObject * parent )
         m_boxes.append( box );
         addItem( box );
 
-        connect( box, SIGNAL(selected(int)), this, SIGNAL(gameSelected(int)) );
-        connect( box, SIGNAL(hoverChanged(GameSelectionBox*,bool)), this, SLOT(boxHoverChanged(GameSelectionBox*,bool)) );
+        connect( box, &GameSelectionBox::selected, this, &GameSelectionScene::gameSelected );
+        connect( box, &GameSelectionBox::hoverChanged, this, &GameSelectionScene::boxHoverChanged );
     }
 
     qSort( m_boxes.begin(), m_boxes.end(), GameSelectionBox::lessThan );
@@ -234,7 +235,7 @@ GameSelectionScene::~GameSelectionScene()
 void GameSelectionScene::resizeScene( const QSize & size )
 {
     int numBoxes = m_boxes.size();
-    qreal boxAspect = Renderer::self()->aspectRatioOfElement( "bubble" );
+    qreal boxAspect = Renderer::self()->aspectRatioOfElement( QStringLiteral("bubble") );
     qreal sceneAspect = qreal( size.width() ) / size.height();
 
     // Determine the optimal number of rows/columns for the grid

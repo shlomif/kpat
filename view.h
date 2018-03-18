@@ -40,21 +40,21 @@
 
 #include <KGameRendererClient>
 
-#include <QtGui/QGraphicsView>
+#include <QGraphicsView>
 
 
 class PatienceView: public QGraphicsView, public KGameRendererClient
 {
 public:
-    PatienceView ( QWidget * parent );
+    explicit PatienceView ( QWidget * parent );
     virtual ~PatienceView();
 
     void setScene( QGraphicsScene * scene );
 
 protected:
-    virtual void resizeEvent( QResizeEvent * e );
-    virtual void drawBackground( QPainter * painter, const QRectF & rect );
-    virtual void receivePixmap( const QPixmap & pixmap );
+    void resizeEvent( QResizeEvent * e ) Q_DECL_OVERRIDE;
+    void drawBackground( QPainter * painter, const QRectF & rect ) Q_DECL_OVERRIDE;
+    void receivePixmap( const QPixmap & pixmap ) Q_DECL_OVERRIDE;
 
 private:
     void updateSceneSize();

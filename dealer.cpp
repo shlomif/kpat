@@ -47,18 +47,18 @@
 #include "KCardTheme"
 
 #include <KConfigGroup>
-#include <KDebug>
+#include <QDebug>
 #include <KLocalizedString>
 #include <KMessageBox>
 #include <KRandom>
 #include <KSharedConfig>
 
-#include <QtCore/QCoreApplication>
-#include <QtCore/QMutex>
-#include <QtCore/QThread>
-#include <QtCore/QXmlStreamReader>
-#include <QtCore/QXmlStreamWriter>
-#include <QtGui/QGraphicsSceneMouseEvent>
+#include <QCoreApplication>
+#include <QMutex>
+#include <QThread>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
+#include <QGraphicsSceneMouseEvent>
 
 #include <cmath>
 
@@ -118,13 +118,13 @@ namespace
         switch ( suit )
         {
         case KCardDeck::Clubs:
-            return "clubs";
+            return QStringLiteral("clubs");
         case KCardDeck::Diamonds:
-            return "diamonds";
+            return QStringLiteral("diamonds");
         case KCardDeck::Hearts:
-            return "hearts";
+            return QStringLiteral("hearts");
         case KCardDeck::Spades:
-            return "spades";
+            return QStringLiteral("spades");
         default:
             return QString();
         }
@@ -135,31 +135,31 @@ namespace
         switch ( rank )
         {
         case KCardDeck::Ace:
-            return "ace";
+            return QStringLiteral("ace");
         case KCardDeck::Two:
-            return "two";
+            return QStringLiteral("two");
         case KCardDeck::Three:
-            return "three";
+            return QStringLiteral("three");
         case KCardDeck::Four:
-            return "four";
+            return QStringLiteral("four");
         case KCardDeck::Five:
-            return "five";
+            return QStringLiteral("five");
         case KCardDeck::Six:
-            return "six";
+            return QStringLiteral("six");
         case KCardDeck::Seven:
-            return "seven";
+            return QStringLiteral("seven");
         case KCardDeck::Eight:
-            return "eight";
+            return QStringLiteral("eight");
         case KCardDeck::Nine:
-            return "nine";
+            return QStringLiteral("nine");
         case KCardDeck::Ten:
-            return "ten";
+            return QStringLiteral("ten");
         case KCardDeck::Jack:
-            return "jack";
+            return QStringLiteral("jack");
         case KCardDeck::Queen:
-            return "queen";
+            return QStringLiteral("queen");
         case KCardDeck::King:
-            return "king";
+            return QStringLiteral("king");
         default:
             return QString();
         }
@@ -177,7 +177,7 @@ public:
     {
     }
 
-    virtual void run()
+    void run() Q_DECL_OVERRIDE
     {
         Solver::ExitStatus result = m_solver->patsolve();
         emit finished( result );
@@ -214,29 +214,29 @@ void DealerScene::saveLegacyFile( QIODevice * io )
     xml.setAutoFormattingIndent( -1 );
     xml.writeStartDocument();
 
-    xml.writeDTD( "<!DOCTYPE kpat>" );
+    xml.writeDTD( QStringLiteral("<!DOCTYPE kpat>") );
 
-    xml.writeStartElement( "dealer" );
-    xml.writeAttribute( "id", QString::number( gameId() ) );
-    xml.writeAttribute( "options", getGameOptions() );
-    xml.writeAttribute( "number", QString::number( gameNumber() ) );
-    xml.writeAttribute( "moves", QString::number( moveCount() ) );
-    xml.writeAttribute( "started", QString::number( m_dealStarted ) );
-    xml.writeAttribute( "data", getGameState() );
+    xml.writeStartElement( QStringLiteral("dealer") );
+    xml.writeAttribute( QStringLiteral("id"), QString::number( gameId() ) );
+    xml.writeAttribute( QStringLiteral("options"), getGameOptions() );
+    xml.writeAttribute( QStringLiteral("number"), QString::number( gameNumber() ) );
+    xml.writeAttribute( QStringLiteral("moves"), QString::number( moveCount() ) );
+    xml.writeAttribute( QStringLiteral("started"), QString::number( m_dealStarted ) );
+    xml.writeAttribute( QStringLiteral("data"), getGameState() );
 
     foreach( const PatPile * p, patPiles() )
     {
-        xml.writeStartElement( "pile" );
-        xml.writeAttribute( "index", QString::number( p->index() ) );
-        xml.writeAttribute( "z", QString::number( p->zValue() ) );
+        xml.writeStartElement( QStringLiteral("pile") );
+        xml.writeAttribute( QStringLiteral("index"), QString::number( p->index() ) );
+        xml.writeAttribute( QStringLiteral("z"), QString::number( p->zValue() ) );
 
         foreach( const KCard * c, p->cards() )
         {
-            xml.writeStartElement( "card" );
-            xml.writeAttribute( "suit", QString::number( c->suit() ) );
-            xml.writeAttribute( "value", QString::number( c->rank() ) );
-            xml.writeAttribute( "faceup", QString::number( c->isFaceUp() ) );
-            xml.writeAttribute( "z", QString::number( c->zValue() ) );
+            xml.writeStartElement( QStringLiteral("card") );
+            xml.writeAttribute( QStringLiteral("suit"), QString::number( c->suit() ) );
+            xml.writeAttribute( QStringLiteral("value"), QString::number( c->rank() ) );
+            xml.writeAttribute( QStringLiteral("faceup"), QString::number( c->isFaceUp() ) );
+            xml.writeAttribute( QStringLiteral("z"), QString::number( c->zValue() ) );
             xml.writeEndElement();
         }
         xml.writeEndElement();
@@ -262,13 +262,13 @@ bool DealerScene::loadLegacyFile( QIODevice * io )
     // this never caused crashes. Fortunately, in Spider we can count the
     // number of suits ourselves. For Klondike, there is no way to recover
     // that information.
-    QString options = xml.attributes().value( "options" ).toString();
+    QString options = xml.attributes().value( QStringLiteral("options") ).toString();
     if ( gameId() == 17 && options.isEmpty() )
     {
         QSet<int> suits;
         while ( !xml.atEnd() )
             if ( xml.readNextStartElement() && xml.name() == "card" )
-                suits << readIntAttribute( xml, "suit" );
+                suits << readIntAttribute( xml, QStringLiteral("suit") );
         options = QString::number( suits.size() );
 
         // "Rewind" back to the <dealer> tag. Yes, this is ugly.
@@ -279,10 +279,10 @@ bool DealerScene::loadLegacyFile( QIODevice * io )
     }
     setGameOptions( options );
 
-    m_dealNumber = readIntAttribute( xml, "number" );
-    m_loadedMoveCount = readIntAttribute( xml, "moves" );
-    m_dealStarted = readIntAttribute( xml, "started" );
-    QString gameStateData = xml.attributes().value( "data" ).toString();
+    m_dealNumber = readIntAttribute( xml, QStringLiteral("number") );
+    m_loadedMoveCount = readIntAttribute( xml, QStringLiteral("moves") );
+    m_dealStarted = readIntAttribute( xml, QStringLiteral("started") );
+    QString gameStateData = xml.attributes().value( QStringLiteral("data") ).toString();
 
     QMultiHash<quint32,KCard*> cards;
     foreach ( KCard * c, deck()->cards() )
@@ -297,16 +297,16 @@ bool DealerScene::loadLegacyFile( QIODevice * io )
     {
         if ( xml.name() != "pile" )
         {
-            kWarning() << "Expected a \"pile\" tag. Found a" << xml.name() << "tag.";
+            qWarning() << "Expected a \"pile\" tag. Found a" << xml.name() << "tag.";
             return false;
         }
 
         bool ok;
-        int index = readIntAttribute( xml, "index", &ok );
+        int index = readIntAttribute( xml, QStringLiteral("index"), &ok );
         QHash<int,PatPile*>::const_iterator it = piles.constFind( index );
         if ( !ok || it == piles.constEnd() )
         {
-            kWarning() << "Unrecognized pile index:" << xml.attributes().value( "index" );
+            qWarning() << "Unrecognized pile index:" << xml.attributes().value( QStringLiteral("index") );
             return false;
         }
 
@@ -318,23 +318,23 @@ bool DealerScene::loadLegacyFile( QIODevice * io )
         {
             if ( xml.name() != "card" )
             {
-                kWarning() << "Expected a \"card\" tag. Found a" << xml.name() << "tag.";
+                qWarning() << "Expected a \"card\" tag. Found a" << xml.name() << "tag.";
                 return false;
             }
             
             bool suitOk, rankOk, faceUpOk;
-            int suit = readIntAttribute( xml, "suit", &suitOk );
-            int rank = readIntAttribute( xml, "value", &rankOk );
-            bool faceUp = readIntAttribute( xml, "faceup", &faceUpOk );
+            int suit = readIntAttribute( xml, QStringLiteral("suit"), &suitOk );
+            int rank = readIntAttribute( xml, QStringLiteral("value"), &rankOk );
+            bool faceUp = readIntAttribute( xml, QStringLiteral("faceup"), &faceUpOk );
             
             quint32 id = KCardDeck::getId( KCardDeck::Suit( suit ), KCardDeck::Rank( rank ), 0 );
             KCard * card = cards.take( id );
 
             if ( !suitOk || !rankOk || !faceUpOk || !card )
             {
-                kWarning() << "Unrecognized card: suit=" << xml.attributes().value("suit")
-                           << " value=" << xml.attributes().value("value")
-                           << " faceup=" << xml.attributes().value("faceup");
+                qWarning() << "Unrecognized card: suit=" << xml.attributes().value(QStringLiteral("suit"))
+                           << " value=" << xml.attributes().value(QStringLiteral("value"))
+                           << " faceup=" << xml.attributes().value(QStringLiteral("faceup"));
                 return false;
             }
 
@@ -364,11 +364,11 @@ void DealerScene::saveFile( QIODevice * io )
     xml.setAutoFormattingIndent( -1 );
     xml.writeStartDocument();
 
-    xml.writeStartElement( "kpat-game" );
-    xml.writeAttribute( "game-type", m_di->baseIdString() );
+    xml.writeStartElement( QStringLiteral("kpat-game") );
+    xml.writeAttribute( QStringLiteral("game-type"), m_di->baseIdString() );
     if ( !getGameOptions().isEmpty() )
-        xml.writeAttribute( "game-type-options", getGameOptions() );
-    xml.writeAttribute( "deal-number", QString::number( gameNumber() ) );
+        xml.writeAttribute( QStringLiteral("game-type-options"), getGameOptions() );
+    xml.writeAttribute( QStringLiteral("deal-number"), QString::number( gameNumber() ) );
 
     QList<GameState*> allStates;
     for ( int i = 0; i < m_undoStack.size(); ++i )
@@ -382,32 +382,32 @@ void DealerScene::saveFile( QIODevice * io )
     for ( int i = 0; i < allStates.size(); ++i )
     {
         const GameState * state = allStates.at( i );
-        xml.writeStartElement( "state" );
+        xml.writeStartElement( QStringLiteral("state") );
         if ( state->stateData != lastGameSpecificState )
         {
-            xml.writeAttribute( "game-specific-state", state->stateData );
+            xml.writeAttribute( QStringLiteral("game-specific-state"), state->stateData );
             lastGameSpecificState = state->stateData;
         }
         if ( i == m_undoStack.size() )
-            xml.writeAttribute( "current", "true" );
+            xml.writeAttribute( QStringLiteral("current"), QStringLiteral("true") );
 
         foreach ( const CardStateChange & change, state->changes )
         {
-            xml.writeStartElement( "move" );
-            xml.writeAttribute( "pile", change.newState.pile->objectName() );
-            xml.writeAttribute( "position", QString::number( change.newState.index ) );
+            xml.writeStartElement( QStringLiteral("move") );
+            xml.writeAttribute( QStringLiteral("pile"), change.newState.pile->objectName() );
+            xml.writeAttribute( QStringLiteral("position"), QString::number( change.newState.index ) );
 
             bool faceChanged = !change.oldState.pile
                                || change.oldState.faceUp != change.newState.faceUp;
 
             foreach ( const KCard * card, change.cards )
             {
-                xml.writeStartElement( "card" );
-                xml.writeAttribute( "id", QString("%1").arg( card->id(), 7, 10, QChar('0') ) );
-                xml.writeAttribute( "suit", suitToString( card->suit() ) );
-                xml.writeAttribute( "rank", rankToString( card->rank() ) );
+                xml.writeStartElement( QStringLiteral("card") );
+                xml.writeAttribute( QStringLiteral("id"), QStringLiteral("%1").arg( card->id(), 7, 10, QChar('0') ) );
+                xml.writeAttribute( QStringLiteral("suit"), suitToString( card->suit() ) );
+                xml.writeAttribute( QStringLiteral("rank"), rankToString( card->rank() ) );
                 if ( faceChanged )
-                    xml.writeAttribute( "turn", change.newState.faceUp ? "face-up" : "face-down" );
+                    xml.writeAttribute( QStringLiteral("turn"), change.newState.faceUp ? "face-up" : "face-down" );
                 xml.writeEndElement();
             }
 
@@ -436,12 +436,12 @@ bool DealerScene::loadFile( QIODevice * io )
 
     if ( xml.name() != "kpat-game" )
     {
-        kWarning() << "First tag is not \"kpat-game\"";
+        qWarning() << "First tag is not \"kpat-game\"";
         return false;
     }
 
-    m_dealNumber = readIntAttribute( xml, "deal-number" );
-    setGameOptions( xml.attributes().value( "game-type-options" ).toString() );
+    m_dealNumber = readIntAttribute( xml, QStringLiteral("deal-number") );
+    setGameOptions( xml.attributes().value( QStringLiteral("game-type-options") ).toString() );
 
     QMultiHash<quint32,KCard*> cardHash;
     foreach ( KCard * c, deck()->cards() )
@@ -457,35 +457,35 @@ bool DealerScene::loadFile( QIODevice * io )
     {
         if ( xml.name() != "state" )
         {
-            kWarning() << "Expected a \"state\" tag. Found a" << xml.name() << "tag.";
+            qWarning() << "Expected a \"state\" tag. Found a" << xml.name() << "tag.";
             return false;
         }
 
-        if ( xml.attributes().hasAttribute( "game-specific-state" ) )
-            setGameState( xml.attributes().value( "game-specific-state" ).toString() );
+        if ( xml.attributes().hasAttribute( QStringLiteral("game-specific-state") ) )
+            setGameState( xml.attributes().value( QStringLiteral("game-specific-state") ).toString() );
 
         if ( undosToDo > -1 )
             ++undosToDo;
-        else if ( xml.attributes().value( "current" ) == "true" )
+        else if ( xml.attributes().value( QStringLiteral("current") ) == "true" )
             undosToDo = 0;
         
         while( xml.readNextStartElement() )
         {
             if ( xml.name() != "move" )
             {
-                kWarning() << "Expected a \"move\" tag. Found a" << xml.name() << "tag.";
+                qWarning() << "Expected a \"move\" tag. Found a" << xml.name() << "tag.";
                 return false;
             }
 
-            QString pileName = xml.attributes().value( "pile" ).toString();
+            QString pileName = xml.attributes().value( QStringLiteral("pile") ).toString();
             KCardPile * pile = pileHash.value( pileName );
 
             bool indexOk;
-            int index = readIntAttribute( xml, "position", &indexOk );
+            int index = readIntAttribute( xml, QStringLiteral("position"), &indexOk );
 
             if ( !pile || !indexOk )
             {
-                kWarning() << "Unrecognized pile or index.";
+                qWarning() << "Unrecognized pile or index.";
                 return false;
             }
 
@@ -493,20 +493,20 @@ bool DealerScene::loadFile( QIODevice * io )
             {
                 if ( xml.name() != "card" )
                 {
-                    kWarning() << "Expected a \"card\" tag. Found a" << xml.name() << "tag.";
+                    qWarning() << "Expected a \"card\" tag. Found a" << xml.name() << "tag.";
                     return false;
                 }
 
-                KCard * card = cardHash.value( readIntAttribute( xml, "id" ) );
+                KCard * card = cardHash.value( readIntAttribute( xml, QStringLiteral("id") ) );
                 if ( !card )
                 {
-                    kWarning() << "Unrecognized card.";
+                    qWarning() << "Unrecognized card.";
                     return false;
                 }
 
-                if ( xml.attributes().value("turn") == "face-up" )
+                if ( xml.attributes().value(QStringLiteral("turn")) == "face-up" )
                     card->setFaceUp( true );
-                else if ( xml.attributes().value("turn") == "face-down" )
+                else if ( xml.attributes().value(QStringLiteral("turn")) == "face-down" )
                     card->setFaceUp( false );
                 
                 pile->insert( index, card );
@@ -573,24 +573,24 @@ DealerScene::DealerScene( const DealerInfo * di )
 
     m_solverUpdateTimer.setInterval( 250 );
     m_solverUpdateTimer.setSingleShot( true );
-    connect( &m_solverUpdateTimer, SIGNAL(timeout()), SLOT(stopAndRestartSolver()) );
+    connect(&m_solverUpdateTimer, &QTimer::timeout, this, &DealerScene::stopAndRestartSolver);
 
     m_demoTimer.setSingleShot( true );
-    connect( &m_demoTimer, SIGNAL(timeout()), SLOT(demo()) );
+    connect(&m_demoTimer, &QTimer::timeout, this, &DealerScene::demo);
 
     m_dropTimer.setSingleShot( true );
-    connect( &m_dropTimer, SIGNAL(timeout()), this, SLOT(drop()) );
+    connect(&m_dropTimer, &QTimer::timeout, this, &DealerScene::drop);
 
     m_wonItem = new MessageBox();
     m_wonItem->setZValue( 2000 );
     m_wonItem->hide();
     addItem( m_wonItem );
 
-    connect( this, SIGNAL(cardAnimationDone()), this, SLOT(animationDone()) );
+    connect(this, &DealerScene::cardAnimationDone, this, &DealerScene::animationDone);
 
-    connect( this, SIGNAL(cardDoubleClicked(KCard*)), this, SLOT(tryAutomaticMove(KCard*)) );
+    connect(this, &DealerScene::cardDoubleClicked, this, &DealerScene::tryAutomaticMove);
     // Make rightClick == doubleClick. See bug #151921
-    connect( this, SIGNAL(cardRightClicked(KCard*)), this, SLOT(tryAutomaticMove(KCard*)) );
+    connect(this, &DealerScene::cardRightClicked, this, &DealerScene::tryAutomaticMove);
 }
 
 DealerScene::~DealerScene()
@@ -954,12 +954,12 @@ void DealerScene::won()
         c->animate( pos2, c->zValue(), 0, true, false, dist / speed );
     }
 
-    connect(deck(), SIGNAL(cardAnimationDone()), this, SLOT(showWonMessage()));
+    connect(deck(), &KAbstractCardDeck::cardAnimationDone, this, &DealerScene::showWonMessage);
 }
 
 void DealerScene::showWonMessage()
 {
-    disconnect(deck(), SIGNAL(cardAnimationDone()), this, SLOT(showWonMessage()));
+    disconnect(deck(), &KAbstractCardDeck::cardAnimationDone, this, &DealerScene::showWonMessage);
 
     // It shouldn't be necessary to stop the demo yet again here, but we
     // get crashes if we don't. Will have to look into this further.
@@ -976,7 +976,7 @@ void DealerScene::showWonMessage()
 
 void DealerScene::updateWonItem()
 {
-    const qreal aspectRatio = Renderer::self()->aspectRatioOfElement("message_frame");
+    const qreal aspectRatio = Renderer::self()->aspectRatioOfElement(QStringLiteral("message_frame"));
     int boxWidth;
     int boxHeight;
     if ( width() < aspectRatio * height() )
@@ -1052,7 +1052,8 @@ void DealerScene::mousePressEvent( QGraphicsSceneMouseEvent * e )
 {
     stop();
 
-    KCard * card = qgraphicsitem_cast<KCard*>( itemAt( e->scenePos() ) );
+    const QList<QGraphicsItem *> itemsAtPoint = items( e->scenePos() );
+    KCard * card = qgraphicsitem_cast<KCard*>( itemsAtPoint.isEmpty() ? 0 : itemsAtPoint.first() );
 
     if ( m_peekedCard )
     {
@@ -1496,7 +1497,7 @@ void DealerScene::slotSolverEnded()
     if ( !m_solverThread )
     {
         m_solverThread = new SolverThread( m_solver );
-        connect( m_solverThread, SIGNAL(finished(int)), this, SLOT(slotSolverFinished(int)));
+        connect(m_solverThread, &SolverThread::finished, this, &DealerScene::slotSolverFinished);
     }
     m_solverThread->start( m_solverEnabled ? QThread::IdlePriority : QThread::NormalPriority );
 }
@@ -1651,14 +1652,14 @@ void DealerScene::demo()
 
         if ( destPile->isEmpty() )
         {
-            kDebug() << "Moving" << card->objectName()
+            qDebug() << "Moving" << card->objectName()
                      << "from the" << sourcePile->objectName()
                      << "pile to the" << destPile->objectName()
                      << "pile, which is empty";
         }
         else
         {
-            kDebug() << "Moving" << card->objectName()
+            qDebug() << "Moving" << card->objectName()
                      << "from the" << sourcePile->objectName()
                      << "pile to the" << destPile->objectName()
                      << "pile, putting it on top of"
@@ -1753,14 +1754,14 @@ void DealerScene::recordGameStatistics()
     {
         int id = oldId();
 
-        QString totalPlayedKey = QString("total%1").arg( id );
-        QString wonKey = QString("won%1").arg( id );
-        QString winStreakKey = QString("winstreak%1").arg( id );
-        QString maxWinStreakKey = QString("maxwinstreak%1").arg( id );
-        QString loseStreakKey = QString("loosestreak%1").arg( id );
-        QString maxLoseStreakKey = QString("maxloosestreak%1").arg( id );
+        QString totalPlayedKey = QStringLiteral("total%1").arg( id );
+        QString wonKey = QStringLiteral("won%1").arg( id );
+        QString winStreakKey = QStringLiteral("winstreak%1").arg( id );
+        QString maxWinStreakKey = QStringLiteral("maxwinstreak%1").arg( id );
+        QString loseStreakKey = QStringLiteral("loosestreak%1").arg( id );
+        QString maxLoseStreakKey = QStringLiteral("maxloosestreak%1").arg( id );
 
-        KConfigGroup config(KGlobal::config(), scores_group);
+        KConfigGroup config(KSharedConfig::openConfig(), scores_group);
 
         int totalPlayed = config.readEntry( totalPlayedKey, 0 );
         int won = config.readEntry( wonKey, 0 );
@@ -1960,7 +1961,7 @@ bool DealerScene::allowedToStartNewGame()
                      i18n("Abandon Current Game?"),
                      KGuiItem(i18n("Abandon Current Game")),
                      KStandardGuiItem::cancel(),
-                     "careaboutstats"
+                     QStringLiteral("careaboutstats")
                     ) == KMessageBox::Continue;
 }
 

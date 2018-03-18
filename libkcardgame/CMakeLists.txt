@@ -1,3 +1,4 @@
+include(GenerateExportHeader)
 set( libkcardgame_SRCS
     kabstractcarddeck.cpp
     kcard.cpp
@@ -8,8 +9,9 @@ set( libkcardgame_SRCS
     kcardthemewidget.cpp
 )
 
-kde4_add_library( kcardgame SHARED ${libkcardgame_SRCS} )
-target_link_libraries( kcardgame kdegames ${KDE4_KNEWSTUFF3_LIBS} )
+add_library( kcardgame SHARED ${libkcardgame_SRCS} )
+generate_export_header(kcardgame BASE_NAME libkcardgame)
+target_link_libraries( kcardgame KF5::NewStuff KF5::GuiAddons Qt5::Svg KF5::Completion KF5::I18n)
 
-install( TARGETS kcardgame ${INSTALL_TARGETS_DEFAULT_ARGS} )
-install( FILES kcardtheme.knsrc  DESTINATION  ${CONFIG_INSTALL_DIR} )
+install( TARGETS kcardgame ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} )
+install( FILES kcardtheme.knsrc  DESTINATION  ${KDE_INSTALL_CONFDIR} )

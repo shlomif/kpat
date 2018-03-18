@@ -45,8 +45,8 @@ class HighlightableItem;
 #include "libkcardgame_export.h"
 class KCardPile;
 
-#include <QtCore/QSet>
-#include <QtGui/QGraphicsScene>
+#include <QSet>
+#include <QGraphicsScene>
 
 class LIBKCARDGAME_EXPORT KCardScene : public QGraphicsScene
 {
@@ -66,7 +66,7 @@ public:
     };
     Q_DECLARE_FLAGS(SceneAlignment, SceneAlignmentFlag)
 
-    KCardScene( QObject * parent = 0 );
+    explicit KCardScene( QObject * parent = 0 );
     ~KCardScene();
 
     void setDeck( KAbstractCardDeck * deck );
@@ -136,13 +136,13 @@ protected:
     virtual void cardsDroppedOnPile( const QList<KCard*> & cards, KCardPile * pile );
     virtual void cardsMoved( const QList<KCard*> & cards, KCardPile * oldPile, KCardPile * newPile );
 
-    virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * e );
-    virtual void mouseMoveEvent( QGraphicsSceneMouseEvent * e );
-    virtual void mousePressEvent( QGraphicsSceneMouseEvent * e );
-    virtual void mouseReleaseEvent( QGraphicsSceneMouseEvent * e );
-    virtual void wheelEvent( QGraphicsSceneWheelEvent * e );
+    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent * e ) Q_DECL_OVERRIDE;
+    void mouseMoveEvent( QGraphicsSceneMouseEvent * e ) Q_DECL_OVERRIDE;
+    void mousePressEvent( QGraphicsSceneMouseEvent * e ) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent * e ) Q_DECL_OVERRIDE;
+    void wheelEvent( QGraphicsSceneWheelEvent * e ) Q_DECL_OVERRIDE;
 
-    virtual void drawForeground( QPainter * painter, const QRectF & rect );
+    void drawForeground( QPainter * painter, const QRectF & rect ) Q_DECL_OVERRIDE;
 
 private:
     friend class KCardScenePrivate;

@@ -23,7 +23,7 @@
  * -------------------------------------------------------------------------
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License as
- *   published by the Free Software Foundation; either version 2 of 
+ *   published by the Free Software Foundation; either version 2 of
  *   the License, or (at your option) any later version.
  *
  *   This program is distributed in the hope that it will be useful,
@@ -55,38 +55,42 @@
 
 #include <KgThemeSelector>
 #include <KStandardGameAction>
+#include <KStandardAction>
 
-#include <KAction>
+#include <QAction>
 #include <KActionCollection>
 #include <KConfigDialog>
-#include <KDebug>
-#include <KFileDialog>
-#include <KGlobal>
-#include <KIcon>
-#include <KLocale>
+#include <QDebug>
+#include <QFileDialog>
+#include <QIcon>
+#include <KLocalizedString>
 #include <KMessageBox>
 #include <KRandom>
 #include <KRecentFilesAction>
-#include <KStandardDirs>
-#include <KStatusBar>
-#include <KTemporaryFile>
+#include <QStatusBar>
+#include <QMenuBar>
+#include <QTemporaryFile>
 #include <KToggleAction>
 #include <KToolInvocation>
 #include <KXMLGUIFactory>
-#include <KIO/NetAccess>
+#include <KIOCore/KIO/StoredTransferJob>
 
-#include <QtCore/QList>
-#include <QtCore/QPointer>
-#include <QtCore/QTimer>
-#include <QtCore/QXmlStreamReader>
-#include <QtGui/QDesktopWidget>
+#include <QList>
+#include <QPointer>
+#include <QTimer>
+#include <QXmlStreamReader>
+#include <QDesktopWidget>
+#include <QKeySequence>
+#include <KHelpClient>
+#include <QStandardPaths>
+#include <KSharedConfig>
 
 
 namespace
 {
-    const KUrl dialogUrl( "kfiledialog:///kpat" );
-    const QString saveFileMimeType( "application/vnd.kde.kpatience.savedgame" );
-    const QString legacySaveFileMimeType( "application/vnd.kde.kpatience.savedstate" );
+    const QUrl dialogUrl( QStringLiteral("kfiledialog:///kpat") );
+    const QString saveFileMimeType( QStringLiteral("application/vnd.kde.kpatience.savedgame") );
+    const QString legacySaveFileMimeType( QStringLiteral("application/vnd.kde.kpatience.savedstate") );
 }
 
 
@@ -99,7 +103,7 @@ MainWindow::MainWindow()
     m_soundEngine( 0 ),
     m_dealDialog( 0 )
 {
-    setObjectName( QLatin1String( "MainWindow" ) );
+    setObjectName( QStringLiteral( "MainWindow" ) );
     // KCrash::setEmergencySaveFunction(::saveGame);
 
     setupActions();
@@ -125,13 +129,15 @@ MainWindow::MainWindow()
     m_moveCountStatusLabel = new QLabel(QString(), statusBar());
     m_moveCountStatusLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     statusBar()->addWidget( m_moveCountStatusLabel, 0);
+
+    m_showMenubarAction->setChecked(!menuBar()->isHidden());
 }
 
 MainWindow::~MainWindow()
 {
-    m_recentFilesAction->saveEntries(KGlobal::config()->group( QString() ));
+    m_recentFilesAction->saveEntries(KSharedConfig::openConfig()->group( QString() ));
 
-    Settings::self()->writeConfig();
+    Settings::self()->save();
 
     delete m_dealer;
     delete m_view;
@@ -141,25 +147,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupActions()
 {
-    KAction *a;
+    QAction *a;
 
     // Game Menu
-    a = actionCollection()->addAction( QLatin1String( "new_game" ));
+    a = actionCollection()->addAction( QStringLiteral( "new_game" ));
     a->setText(i18nc("Start a new game of a different type","New &Game..."));
-    a->setIcon( KIcon( QLatin1String( "document-new" )) );
-    a->setShortcuts( KShortcut( Qt::ControlModifier | Qt::ShiftModifier | Qt::Key_N ) );
-    connect( a, SIGNAL(triggered(bool)), SLOT(slotShowGameSelectionScreen()) );
+    a->setIcon( QIcon::fromTheme( QStringLiteral( "document-new" )) );
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::SHIFT + Qt::Key_N);
+    connect(a, &QAction::triggered, this, &MainWindow::slotShowGameSelectionScreen);
 
-    a = actionCollection()->addAction( QLatin1String( "new_deal" ));
+    a = actionCollection()->addAction( QStringLiteral( "new_deal" ));
     a->setText(i18nc("Start a new game of without changing the game type", "New &Deal"));
-    a->setIcon( KIcon( QLatin1String( "document-new" )) );
-    a->setShortcuts( KShortcut( Qt::ControlModifier | Qt::Key_N ) );
-    connect( a, SIGNAL(triggered(bool)), SLOT(newGame()) );
+    a->setIcon( QIcon::fromTheme( QStringLiteral( "document-new" )) );
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_N);
+    connect(a, &QAction::triggered, this, &MainWindow::newGame);
 
-    a = actionCollection()->addAction( QLatin1String( "new_numbered_deal" ));
+    a = actionCollection()->addAction( QStringLiteral( "new_numbered_deal" ));
     a->setText(i18nc("Start a game by giving its particular number", "New &Numbered Deal..."));
-    a->setShortcut( KShortcut( Qt::ControlModifier | Qt::Key_D ) );
-    connect( a, SIGNAL(triggered(bool)), SLOT(newNumberedDeal()) );
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_D);
+    connect(a, &QAction::triggered, this, &MainWindow::newNumberedDeal);
 
     a = KStandardGameAction::restart(this, SLOT(restart()), actionCollection());
     a->setText(i18nc("Replay the current deal from the start", "Restart Deal"));
@@ -167,33 +173,33 @@ void MainWindow::setupActions()
     // Note that this action is not shown in the menu or toolbar. It is
     // only provided for advanced users who can use it by shorcut or add it to
     // the toolbar if they wish.
-    a = actionCollection()->addAction( QLatin1String( "next_deal" ));
+    a = actionCollection()->addAction( QStringLiteral( "next_deal" ));
     a->setText(i18nc("Start the game with the number one greater than the current one", "Next Deal"));
-    a->setIcon( KIcon( QLatin1String( "go-next" )) );
-    a->setShortcut( KShortcut( Qt::ControlModifier | Qt::Key_Plus ) );
-    connect( a, SIGNAL(triggered(bool)), this, SLOT(nextDeal()) );
+    a->setIcon( QIcon::fromTheme( QStringLiteral( "go-next" )) );
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_Plus);
+    connect(a, &QAction::triggered, this, &MainWindow::nextDeal);
 
     // Note that this action is not shown in the menu or toolbar. It is
     // only provided for advanced users who can use it by shorcut or add it to
     // the toolbar if they wish.
-    a = actionCollection()->addAction( QLatin1String( "previous_deal" ));
+    a = actionCollection()->addAction( QStringLiteral( "previous_deal" ));
     a->setText(i18nc("Start the game with the number one less than the current one", "Previous Deal"));
-    a->setIcon( KIcon( QLatin1String( "go-previous" )) );
-    a->setShortcut( KShortcut( Qt::ControlModifier | Qt::Key_Minus ) );
-    connect( a, SIGNAL(triggered(bool)), this, SLOT(previousDeal()) );
+    a->setIcon( QIcon::fromTheme( QStringLiteral( "go-previous" )) );
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_Minus);
+    connect(a, &QAction::triggered, this, &MainWindow::previousDeal);
 
     KStandardGameAction::load( this, SLOT(loadGame()), actionCollection() );
 
-    m_recentFilesAction = KStandardGameAction::loadRecent( this, SLOT(loadGame(KUrl)), actionCollection() );
-    m_recentFilesAction->loadEntries(KGlobal::config()->group( QString() ));
+    m_recentFilesAction = KStandardGameAction::loadRecent( this, SLOT(loadGame(QUrl)), actionCollection() );
+    m_recentFilesAction->loadEntries(KSharedConfig::openConfig()->group( QString() ));
 
     m_saveAction = KStandardGameAction::saveAs(this, SLOT(saveGame()), actionCollection());
-    m_saveAction->setShortcut( KShortcut( Qt::ControlModifier | Qt::Key_S ) );
+    actionCollection()->setDefaultShortcut(m_saveAction, Qt::CTRL + Qt::Key_S);
 
-    a = actionCollection()->addAction( QLatin1String( "game_stats" ));
+    a = actionCollection()->addAction( QStringLiteral( "game_stats" ));
     a->setText(i18n("Statistics"));
-    a->setIcon( KIcon( QLatin1String( "games-highscores" )) );
-    connect( a, SIGNAL(triggered(bool)), SLOT(showStats()) );
+    a->setIcon( QIcon::fromTheme( QStringLiteral( "games-highscores" )) );
+    connect(a, &QAction::triggered, this, &MainWindow::showStats);
 
     KStandardGameAction::quit(this, SLOT(close()), actionCollection());
 
@@ -212,116 +218,118 @@ void MainWindow::setupActions()
     a = KStandardGameAction::hint( 0, 0, 0 );
     m_hintAction->setText( a->text() );
     m_hintAction->setIcon( a->icon() );
-    m_hintAction->setShortcut( a->shortcut() );
+    actionCollection()->setDefaultShortcut( m_hintAction, a->shortcut() );
     m_hintAction->setToolTip( a->toolTip() );
     m_hintAction->setWhatsThis( a->whatsThis() );
     delete a;
     QString actionName( KStandardGameAction::name( KStandardGameAction::Hint ) );
     actionCollection()->addAction( actionName, m_hintAction );
-    connect( m_hintAction, SIGNAL(triggered()), this, SLOT(toggleHints()) );
+    connect(m_hintAction, &QAction::triggered, this, &MainWindow::toggleHints);
 
-    m_drawAction = actionCollection()->addAction( QLatin1String( "move_draw" ));
+    m_drawAction = actionCollection()->addAction( QStringLiteral( "move_draw" ));
     m_drawAction->setText( i18nc("Take one or more cards from the deck, flip them, and place them in play", "Dra&w") );
-    m_drawAction->setIcon( KIcon( QLatin1String( "kpat" )) );
-    m_drawAction->setShortcut( Qt::Key_Tab );
+    m_drawAction->setIcon( QIcon::fromTheme( QStringLiteral( "kpat" )) );
+    actionCollection()->setDefaultShortcut(m_drawAction, Qt::Key_Tab );
 
-    m_dealAction = actionCollection()->addAction( QLatin1String( "move_deal" ));
+    m_dealAction = actionCollection()->addAction( QStringLiteral( "move_deal" ));
     m_dealAction->setText( i18nc("Deal a new row of cards from the deck", "Dea&l Row") );
-    m_dealAction->setIcon( KIcon( QLatin1String( "kpat" )) );
-    m_dealAction->setShortcut( Qt::Key_Return );
+    m_dealAction->setIcon( QIcon::fromTheme( QStringLiteral( "kpat" )) );
+    actionCollection()->setDefaultShortcut(m_dealAction, Qt::Key_Return );
 
-    m_redealAction = actionCollection()->addAction( QLatin1String( "move_redeal" ));
+    m_redealAction = actionCollection()->addAction( QStringLiteral( "move_redeal" ));
     m_redealAction->setText( i18nc("Collect the cards in play, shuffle them and redeal them", "&Redeal") );
-    m_redealAction->setIcon( KIcon( QLatin1String( "roll" )) );
-    m_redealAction->setShortcut( Qt::Key_R );
+    m_redealAction->setIcon( QIcon::fromTheme( QStringLiteral( "roll" )) );
+    actionCollection()->setDefaultShortcut(m_redealAction, Qt::Key_R );
 
     m_dropAction = new KToggleAction( actionCollection() );
     m_dropAction->setText( i18nc("Automatically move cards to the foundation piles", "Dro&p") );
-    m_dropAction->setIcon( KIcon( QLatin1String( "games-endturn" )) );
-    m_dropAction->setShortcut( Qt::Key_P );
-    actionCollection()->addAction( QLatin1String(  "move_drop" ), m_dropAction );
-    connect( m_dropAction, SIGNAL(triggered()), this, SLOT(toggleDrop()) );
+    m_dropAction->setIcon( QIcon::fromTheme( QStringLiteral( "games-endturn" )) );
+    actionCollection()->setDefaultShortcut(m_dropAction, Qt::Key_P );
+    actionCollection()->addAction( QStringLiteral(  "move_drop" ), m_dropAction );
+    connect(m_dropAction, &QAction::triggered, this, &MainWindow::toggleDrop);
 
 
     // Settings Menu
-    a = actionCollection()->addAction( QLatin1String( "select_deck" ));
+    a = actionCollection()->addAction( QStringLiteral( "select_deck" ));
     a->setText(i18n("Change Appearance..."));
-    connect( a, SIGNAL(triggered(bool)), SLOT(configureAppearance()) );
-    a->setShortcuts( KShortcut( Qt::Key_F10 ) );
+    connect(a, &QAction::triggered, this, &MainWindow::configureAppearance);
+    actionCollection()->setDefaultShortcut(a, Qt::Key_F10 );
 
     m_autoDropEnabledAction = new KToggleAction(i18n("&Enable Autodrop"), this);
-    actionCollection()->addAction( QLatin1String( "enable_autodrop" ), m_autoDropEnabledAction );
-    connect( m_autoDropEnabledAction, SIGNAL(triggered(bool)), SLOT(setAutoDropEnabled(bool)) );
+    actionCollection()->addAction( QStringLiteral( "enable_autodrop" ), m_autoDropEnabledAction );
+    connect(m_autoDropEnabledAction, &KToggleAction::triggered, this, &MainWindow::setAutoDropEnabled);
     m_autoDropEnabledAction->setChecked( Settings::autoDropEnabled() );
 
     m_solverEnabledAction = new KToggleAction(i18n("E&nable Solver"), this);
-    actionCollection()->addAction( QLatin1String( "enable_solver" ), m_solverEnabledAction );
-    connect( m_solverEnabledAction, SIGNAL(triggered(bool)), SLOT(enableSolver(bool)) );
+    actionCollection()->addAction( QStringLiteral( "enable_solver" ), m_solverEnabledAction );
+    connect(m_solverEnabledAction, &KToggleAction::triggered, this, &MainWindow::enableSolver);
     m_solverEnabledAction->setChecked( Settings::solverEnabled() );
 
-    m_playSoundsAction = new KToggleAction( KIcon( QLatin1String( "preferences-desktop-sound") ), i18n("Play &Sounds" ), this );
-    actionCollection()->addAction( QLatin1String( "play_sounds" ), m_playSoundsAction );
-    connect( m_playSoundsAction, SIGNAL(triggered(bool)), SLOT(enableSounds(bool)) );
+    m_playSoundsAction = new KToggleAction( QIcon::fromTheme( QStringLiteral( "preferences-desktop-sound") ), i18n("Play &Sounds" ), this );
+    actionCollection()->addAction( QStringLiteral( "play_sounds" ), m_playSoundsAction );
+    connect(m_playSoundsAction, &KToggleAction::triggered, this, &MainWindow::enableSounds);
     m_playSoundsAction->setChecked( Settings::playSounds() );
 
     m_rememberStateAction = new KToggleAction(i18n("&Remember State on Exit"), this);
-    actionCollection()->addAction( QLatin1String( "remember_state" ), m_rememberStateAction );
-    connect( m_rememberStateAction, SIGNAL(triggered(bool)), SLOT(enableRememberState(bool)) );
+    actionCollection()->addAction( QStringLiteral( "remember_state" ), m_rememberStateAction );
+    connect(m_rememberStateAction, &KToggleAction::triggered, this, &MainWindow::enableRememberState);
     m_rememberStateAction->setChecked( Settings::rememberStateOnExit() );
 
 
     // Help Menu
-    m_gameHelpAction = actionCollection()->addAction( QLatin1String( "help_game" ));
-    m_gameHelpAction->setIcon( KIcon( QLatin1String( "help-browser" )) );
-    connect( m_gameHelpAction, SIGNAL(triggered(bool)), SLOT(helpGame()));
-    m_gameHelpAction->setShortcuts( KShortcut( Qt::ControlModifier | Qt::ShiftModifier | Qt::Key_F1 ) );
+    m_gameHelpAction = actionCollection()->addAction( QStringLiteral( "help_game" ));
+    m_gameHelpAction->setIcon( QIcon::fromTheme( QStringLiteral( "help-browser" )) );
+    connect(m_gameHelpAction, &QAction::triggered, this, &MainWindow::helpGame);
+    actionCollection()->setDefaultShortcut(m_gameHelpAction, Qt::CTRL + Qt::SHIFT + Qt::Key_F1 );
 
 
     // Hidden actions
     if (!qgetenv("KDE_DEBUG").isEmpty()) // developer shortcut
     {
-        a = actionCollection()->addAction( QLatin1String( "themePreview" ));
+        a = actionCollection()->addAction( QStringLiteral( "themePreview" ));
         a->setText(i18n("Generate a theme preview image"));
-        connect( a, SIGNAL(triggered(bool)), SLOT(generateThemePreview()) );
-        a->setShortcuts( KShortcut( Qt::Key_F7 ) );
+        connect(a, &QAction::triggered, this, &MainWindow::generateThemePreview);
+        actionCollection()->setDefaultShortcut(a, Qt::Key_F7 );
 
-        a = actionCollection()->addAction( QLatin1String( "snapshot" ));
+        a = actionCollection()->addAction( QStringLiteral( "snapshot" ));
         a->setText(i18n("Take Game Preview Snapshots"));
-        connect( a, SIGNAL(triggered(bool)), SLOT(slotSnapshot()) );
-        a->setShortcuts( KShortcut( Qt::Key_F8 ) );
+        connect(a, &QAction::triggered, this, &MainWindow::slotSnapshot);
+        actionCollection()->setDefaultShortcut(a, Qt::Key_F8);
 
-        a = actionCollection()->addAction( QLatin1String( "random_set" ));
+        a = actionCollection()->addAction( QStringLiteral( "random_set" ));
         a->setText(i18n("Random Cards"));
-        connect( a, SIGNAL(triggered(bool)), SLOT(slotPickRandom()) );
-        a->setShortcuts( KShortcut( Qt::Key_F9 ) );
+        connect(a, &QAction::triggered, this, &MainWindow::slotPickRandom);
+        actionCollection()->setDefaultShortcut(a, Qt::Key_F9);
     }
 
     // Keyboard navigation actions
-    m_leftAction = actionCollection()->addAction( QLatin1String( "focus_left" ));
-    m_leftAction->setText("Move Focus to Previous Pile");
-    m_leftAction->setShortcuts( KShortcut( Qt::Key_Left ) );
+    m_leftAction = actionCollection()->addAction( QStringLiteral( "focus_left" ));
+    m_leftAction->setText(QStringLiteral("Move Focus to Previous Pile"));
+    actionCollection()->setDefaultShortcut(m_leftAction, Qt::Key_Left );
 
-    m_rightAction = actionCollection()->addAction( QLatin1String( "focus_right" ));
-    m_rightAction->setText("Move Focus to Next Pile");
-    m_rightAction->setShortcuts( KShortcut( Qt::Key_Right ) );
+    m_rightAction = actionCollection()->addAction( QStringLiteral( "focus_right" ));
+    m_rightAction->setText(QStringLiteral("Move Focus to Next Pile"));
+    actionCollection()->setDefaultShortcut(m_rightAction, Qt::Key_Right );
 
-    m_upAction = actionCollection()->addAction( QLatin1String( "focus_up" ));
-    m_upAction->setText("Move Focus to Card Below");
-    m_upAction->setShortcuts( KShortcut( Qt::Key_Up ) );
+    m_upAction = actionCollection()->addAction( QStringLiteral( "focus_up" ));
+    m_upAction->setText(QStringLiteral("Move Focus to Card Below"));
+    actionCollection()->setDefaultShortcut(m_upAction, Qt::Key_Up );
 
-    m_downAction = actionCollection()->addAction( QLatin1String( "focus_down" ));
-    m_downAction->setText("Move Focus to Card Above");
-    m_downAction->setShortcuts( KShortcut( Qt::Key_Down ) );
+    m_downAction = actionCollection()->addAction( QStringLiteral( "focus_down" ));
+    m_downAction->setText(QStringLiteral("Move Focus to Card Above"));
+    actionCollection()->setDefaultShortcut(m_downAction, Qt::Key_Down );
 
-    m_cancelAction = actionCollection()->addAction( QLatin1String( "focus_cancel" ));
-    m_cancelAction->setText("Cancel Focus");
-    m_cancelAction->setShortcuts( KShortcut( Qt::Key_Escape ) );
+    m_cancelAction = actionCollection()->addAction( QStringLiteral( "focus_cancel" ));
+    m_cancelAction->setText(QStringLiteral("Cancel Focus"));
+    actionCollection()->setDefaultShortcut(m_cancelAction, Qt::Key_Escape );
 
-    m_pickUpSetDownAction = actionCollection()->addAction( QLatin1String( "focus_activate" ));
-    m_pickUpSetDownAction->setText("Pick Up or Set Down Focus");
-    m_pickUpSetDownAction->setShortcuts( KShortcut( Qt::Key_Space ) );
+    m_pickUpSetDownAction = actionCollection()->addAction( QStringLiteral( "focus_activate" ));
+    m_pickUpSetDownAction->setText(QStringLiteral("Pick Up or Set Down Focus"));
+    actionCollection()->setDefaultShortcut(m_pickUpSetDownAction, Qt::Key_Space );
+
+    // showMenubar isn't a part of KStandardGameAction
+    m_showMenubarAction = KStandardAction::showMenubar(this, SLOT(toggleMenubar()), actionCollection());
 }
-
 
 void MainWindow::undoMove() {
     if( m_dealer )
@@ -340,8 +348,8 @@ void MainWindow::helpGame()
         const DealerInfo * di = m_dealer_map.value(m_dealer->gameId());
         QString anchor = QString::fromUtf8( di->untranslatedBaseName() );
         anchor = anchor.toLower();
-        anchor = anchor.remove('\'').replace('&', "and").replace(' ', '-');
-        KToolInvocation::invokeHelp(anchor);
+        anchor = anchor.remove('\'').replace('&', QLatin1String("and")).replace(' ', '-');
+        KHelpClient::invokeHelp(anchor);
     }
 }
 
@@ -419,28 +427,28 @@ void MainWindow::slotPickRandom()
 
 void MainWindow::configureAppearance()
 {
-    const QString previewFormat = "back;10_spade,jack_diamond,queen_club,king_heart;1_spade";
-    const QSet<QString> features = QSet<QString>() << "AngloAmerican" << "Backs1";
+    const QString previewFormat = QStringLiteral("back;10_spade,jack_diamond,queen_club,king_heart;1_spade");
+    const QSet<QString> features = QSet<QString>() << QStringLiteral("AngloAmerican") << QStringLiteral("Backs1");
 
-    if ( !KConfigDialog::showDialog("KPatAppearanceDialog") )
+    if ( !KConfigDialog::showDialog(QStringLiteral("KPatAppearanceDialog")) )
     {
-        KConfigDialog * dialog = new KConfigDialog( this, "KPatAppearanceDialog", Settings::self() );
+        KConfigDialog * dialog = new KConfigDialog( this, QStringLiteral("KPatAppearanceDialog"), Settings::self() );
 
         dialog->addPage( new KCardThemeWidget( features, previewFormat ),
                          i18n("Card Deck"),
-                         "games-config-theme",
+                         QStringLiteral("games-config-theme"),
                          i18n("Select a card deck")
                        );
 
         KgThemeProvider* provider = Renderer::self()->themeProvider();
         dialog->addPage( new KgThemeSelector(provider),
                          i18n("Game Theme"),
-                         "games-config-theme",
+                         QStringLiteral("games-config-theme"),
                          i18n("Select a theme for non-card game elements")
                        );
 
-        connect( provider, SIGNAL(currentThemeChanged(const KgTheme*)), SLOT(appearanceChanged()) );
-        connect( dialog, SIGNAL(settingsChanged(QString)), this, SLOT(appearanceChanged()) );
+        connect(provider, &KgThemeProvider::currentThemeChanged, this, &MainWindow::appearanceChanged);
+        connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::appearanceChanged);
         dialog->show();
     }
 }
@@ -467,7 +475,7 @@ void MainWindow::setGameCaption()
     if ( m_dealer )
     {
         const DealerInfo * di = m_dealer_map.value( m_dealer->gameId() );
-        caption = QString("%1 - %2").arg( di->baseName() ).arg(m_dealer->gameNumber());
+        caption = QStringLiteral("%1 - %2").arg( di->baseName() ).arg(m_dealer->gameNumber());
     }
     setCaption( caption );
 }
@@ -477,7 +485,7 @@ void MainWindow::slotGameSelected(int id)
     if ( m_dealer_map.contains(id) )
     {
         setGameType( id );
-        QTimer::singleShot(0 , this, SLOT(startRandom()) );
+        QTimer::singleShot(0 , this, &MainWindow::startRandom );
     }
 }
 
@@ -525,8 +533,8 @@ void MainWindow::setGameType(int id)
                                   " there is no current game.",
                                   "Help &with %1", di->baseName().replace('&', "&&")));
 
-    connect(m_dealer, SIGNAL(solverStateChanged(QString)), SLOT(updateSolverDescription(QString)));
-    connect(m_dealer, SIGNAL(updateMoves(int)), SLOT(slotUpdateMoves(int)));
+    connect(m_dealer, &DealerScene::solverStateChanged, this, &MainWindow::updateSolverDescription);
+    connect(m_dealer, &DealerScene::updateMoves, this, &MainWindow::slotUpdateMoves);
 
     m_solverStatusLabel->setText(QString());
     m_solverStatusLabel->setVisible(true);
@@ -552,7 +560,7 @@ void MainWindow::slotShowGameSelectionScreen()
         if (!m_selector)
         {
             m_selector = new GameSelectionScene(this);
-            connect( m_selector, SIGNAL(gameSelected(int)), SLOT(slotGameSelected(int)) );
+            connect(m_selector, &GameSelectionScene::gameSelected, this, &MainWindow::slotGameSelected);
         }
         m_view->setScene(m_selector);
 
@@ -572,10 +580,10 @@ void MainWindow::updateActions()
 {
     // Enable/disable application actions that aren't appropriate on game
     // selection screen.
-    actionCollection()->action( "new_game" )->setEnabled( m_dealer );
-    actionCollection()->action( "new_deal" )->setEnabled( m_dealer );
-    actionCollection()->action( "game_restart" )->setEnabled( m_dealer );
-    actionCollection()->action( "game_save_as" )->setEnabled( m_dealer );
+    actionCollection()->action( QStringLiteral("new_game") )->setEnabled( m_dealer );
+    actionCollection()->action( QStringLiteral("new_deal") )->setEnabled( m_dealer );
+    actionCollection()->action( QStringLiteral("game_restart") )->setEnabled( m_dealer );
+    actionCollection()->action( QStringLiteral("game_save_as") )->setEnabled( m_dealer );
     m_gameHelpAction->setEnabled( m_dealer );
 
     // Initially disable game actions. They'll be reenabled through signals
@@ -592,45 +600,45 @@ void MainWindow::updateActions()
     // If a dealer exists, connect the game actions to it.
     if ( m_dealer )
     {
-        connect( m_dealer, SIGNAL(undoPossible(bool)), m_undoAction, SLOT(setEnabled(bool)) );
-        connect( m_dealer, SIGNAL(redoPossible(bool)), m_redoAction, SLOT(setEnabled(bool)) );
+        connect(m_dealer, &DealerScene::undoPossible, m_undoAction, &QAction::setEnabled);
+        connect(m_dealer, &DealerScene::redoPossible, m_redoAction, &QAction::setEnabled);
 
-        connect( m_dealer, SIGNAL(hintActive(bool)), m_hintAction, SLOT(setChecked(bool)) );
-        connect( m_dealer, SIGNAL(gameInProgress(bool)), m_hintAction, SLOT(setEnabled(bool)) );
+        connect(m_dealer, &DealerScene::hintActive, m_hintAction, &QAction::setChecked);
+        connect(m_dealer, &DealerScene::gameInProgress, m_hintAction, &QAction::setEnabled);
 
-        connect( m_dealer, SIGNAL(demoActive(bool)), this, SLOT(toggleDemoAction(bool)) );
-        connect( m_dealer, SIGNAL(gameInProgress(bool)), m_demoAction, SLOT(setEnabled(bool)) );
+        connect(m_dealer, &DealerScene::demoActive, this, &MainWindow::toggleDemoAction);
+        connect(m_dealer, &DealerScene::gameInProgress, m_demoAction, &QAction::setEnabled);
 
-        connect( m_dealer, SIGNAL(dropActive(bool)), m_dropAction, SLOT(setChecked(bool)) );
-        connect( m_dealer, SIGNAL(gameInProgress(bool)), m_dropAction, SLOT(setEnabled(bool)) );
+        connect(m_dealer, &DealerScene::dropActive, m_dropAction, &QAction::setChecked);
+        connect(m_dealer, &DealerScene::gameInProgress, m_dropAction, &QAction::setEnabled);
 
-        connect( m_dealer, SIGNAL(gameInProgress(bool)), m_saveAction, SLOT(setEnabled(bool)) );
+        connect(m_dealer, &DealerScene::gameInProgress, m_saveAction, &QAction::setEnabled);
 
-        connect( m_leftAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusLeft()) );
-        connect( m_rightAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusRight()) );
-        connect( m_upAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusUp()) );
-        connect( m_downAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusDown()) );
-        connect( m_cancelAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusCancel()) );
-        connect( m_pickUpSetDownAction, SIGNAL(triggered(bool)), m_dealer, SLOT(keyboardFocusSelect()) );
+        connect(m_leftAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusLeft);
+        connect(m_rightAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusRight);
+        connect(m_upAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusUp);
+        connect(m_downAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusDown);
+        connect(m_cancelAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusCancel);
+        connect(m_pickUpSetDownAction, &QAction::triggered, m_dealer, &DealerScene::keyboardFocusSelect);
 
         if ( m_dealer->actions() & DealerScene::Draw )
         {
-            connect( m_drawAction, SIGNAL(triggered(bool)), m_dealer, SLOT(drawDealRowOrRedeal()) );
-            connect( m_dealer, SIGNAL(newCardsPossible(bool)), m_drawAction, SLOT(setEnabled(bool)) );
+            connect(m_drawAction, &QAction::triggered, m_dealer, &DealerScene::drawDealRowOrRedeal);
+            connect(m_dealer, &DealerScene::newCardsPossible, m_drawAction, &QAction::setEnabled);
         }
         else if ( m_dealer->actions() & DealerScene::Deal )
         {
-            connect( m_dealAction, SIGNAL(triggered(bool)), m_dealer, SLOT(drawDealRowOrRedeal()) );
-            connect( m_dealer, SIGNAL(newCardsPossible(bool)), m_dealAction, SLOT(setEnabled(bool)) );
+            connect(m_dealAction, &QAction::triggered, m_dealer, &DealerScene::drawDealRowOrRedeal);
+            connect(m_dealer, &DealerScene::newCardsPossible, m_dealAction, &QAction::setEnabled);
         }
         else if ( m_dealer->actions() & DealerScene::Redeal )
         {
-            connect( m_redealAction, SIGNAL(triggered(bool)), m_dealer, SLOT(drawDealRowOrRedeal()) );
-            connect( m_dealer, SIGNAL(newCardsPossible(bool)), m_redealAction, SLOT(setEnabled(bool)) );
+            connect(m_redealAction, &QAction::triggered, m_dealer, &DealerScene::drawDealRowOrRedeal);
+            connect(m_dealer, &DealerScene::newCardsPossible, m_redealAction, &QAction::setEnabled);
         }
 
-        guiFactory()->unplugActionList( this, "dealer_options" );
-        guiFactory()->plugActionList( this, "dealer_options", m_dealer->configActions() );
+        guiFactory()->unplugActionList( this, QStringLiteral("dealer_options") );
+        guiFactory()->plugActionList( this, QStringLiteral("dealer_options"), m_dealer->configActions() );
     }
 
     updateGameActionList();
@@ -638,7 +646,7 @@ void MainWindow::updateActions()
 
 void MainWindow::updateGameActionList()
 {
-    guiFactory()->unplugActionList( this, "game_actions" );
+    guiFactory()->unplugActionList( this, QStringLiteral("game_actions") );
 
     m_dropAction->setEnabled( m_dealer && !m_dealer->autoDropEnabled() );
 
@@ -657,7 +665,7 @@ void MainWindow::updateGameActionList()
             actionList.append( m_redealAction );
         if ( !m_dealer->autoDropEnabled() )
             actionList.append( m_dropAction );
-        guiFactory()->plugActionList( this, "game_actions", actionList );
+        guiFactory()->plugActionList( this, QStringLiteral("game_actions"), actionList );
     }
 }
 
@@ -671,8 +679,8 @@ void MainWindow::updateSoundEngine()
             if ( !m_soundEngine )
                 m_soundEngine = new SoundEngine( this );
 
-            connect( m_dealer, SIGNAL(cardsPickedUp()), m_soundEngine, SLOT(cardsPickedUp()) );
-            connect( m_dealer, SIGNAL(cardsPutDown()), m_soundEngine, SLOT(cardsPutDown()) );
+            connect(m_dealer, &DealerScene::cardsPickedUp, m_soundEngine, &SoundEngine::cardsPickedUp);
+            connect(m_dealer, &DealerScene::cardsPutDown, m_soundEngine, &SoundEngine::cardsPutDown);
         }
         else if ( m_soundEngine )
         {
@@ -718,10 +726,26 @@ void MainWindow::toggleDemo()
 }
 
 
-void MainWindow::toggleDemoAction(bool active) 
+void MainWindow::toggleDemoAction(bool active)
 {
     m_demoAction->setChecked( active );
-    m_demoAction->setIcon( KIcon( QLatin1String( active ? "media-playback-pause" : "media-playback-start" ) ) );
+    m_demoAction->setIcon( QIcon::fromTheme( QLatin1String( active ? "media-playback-pause" : "media-playback-start" ) ) );
+}
+
+void MainWindow::toggleMenubar()
+{
+    if(m_showMenubarAction->isChecked())
+        menuBar()->show();
+    else if(KMessageBox::warningContinueCancel(this,
+            i18n("Are you sure you want to hide the menubar? The current shortcut to show it again is %1.",
+                 m_showMenubarAction->shortcut().toString(QKeySequence::NativeText)),
+            i18n("Hide Menubar"),
+            KStandardGuiItem::cont(),
+            KStandardGuiItem::cancel(),
+            QStringLiteral("MenubarWarning")) == KMessageBox::Continue)
+        menuBar()->hide();
+    else
+      m_showMenubarAction->setChecked(true);
 }
 
 void MainWindow::saveNewToolbarConfig()
@@ -732,12 +756,19 @@ void MainWindow::saveNewToolbarConfig()
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
-    QString stateFileName = KStandardDirs::locateLocal( "appdata", saved_state_file );
+    QString stateDirName = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString stateFileName = stateDirName + QLatin1Char('/') + saved_state_file ;
+    QDir stateFileDir(stateDirName);
+    if(!stateFileDir.exists())
+    {
+        //create the directory if it doesn't exist (bug#350160)
+        stateFileDir.mkpath(QStringLiteral("."));
+    }
     QFile stateFile( stateFileName );
 
     // Remove the existing state file, if any.
     stateFile.remove();
-    
+
     if ( m_dealer )
     {
         if ( Settings::rememberStateOnExit() && !m_dealer->isGameWon() )
@@ -763,7 +794,7 @@ void MainWindow::newNumberedDeal()
     if ( !m_dealDialog )
     {
         m_dealDialog = new NumberedDealDialog( this );
-        connect( m_dealDialog, SIGNAL(dealChosen(int,int)), this, SLOT(startNumbered(int,int)) );
+        connect(m_dealDialog, &NumberedDealDialog::dealChosen, this, &MainWindow::startNumbered);
     }
 
     if ( m_dealer )
@@ -804,28 +835,19 @@ void MainWindow::previousDeal()
 }
 
 
-bool MainWindow::loadGame( const KUrl & url, bool addToRecentFiles )
+bool MainWindow::loadGame( const QUrl & url, bool addToRecentFiles )
 {
-    QString fileName;
-    if( !KIO::NetAccess::download( url, fileName, this ) )
+    KIO::StoredTransferJob *job = KIO::storedGet( url );
+    if( !job->exec() )
     {
-        KMessageBox::error( this, i18n("Downloading file failed.") );
-        return false;
-    }
-    QFile file( fileName );
-
-    if ( !file.open( QIODevice::ReadOnly ) )
-    {
-        KMessageBox::error( this, i18n("Opening file failed.") );
-        KIO::NetAccess::removeTempFile( fileName );
+        KMessageBox::error( this, i18n("Downloading file failed: %1", job->errorString()) );
         return false;
     }
 
-    QXmlStreamReader xml( &file );
+    QXmlStreamReader xml( job->data() );
     if ( !xml.readNextStartElement() )
     {
         KMessageBox::error( this, i18n("Error reading XML file: ") + xml.errorString() );
-        KIO::NetAccess::removeTempFile( fileName );
         return false;
     }
 
@@ -836,14 +858,14 @@ bool MainWindow::loadGame( const KUrl & url, bool addToRecentFiles )
     {
         isLegacyFile = true;
         bool ok;
-        int id = xml.attributes().value("id").toString().toInt( &ok );
+        int id = xml.attributes().value(QStringLiteral("id")).toString().toInt( &ok );
         if ( ok )
             gameId = id;
     }
     else if ( xml.name() == "kpat-game" )
     {
         isLegacyFile = false;
-        QStringRef gameType = xml.attributes().value("game-type");
+        QStringRef gameType = xml.attributes().value(QStringLiteral("game-type"));
         foreach ( const DealerInfo * di, DealerInfoList::self()->games() )
         {
             if ( di->baseIdString() == gameType )
@@ -856,35 +878,29 @@ bool MainWindow::loadGame( const KUrl & url, bool addToRecentFiles )
     else
     {
         KMessageBox::error( this, i18n("XML file is not a KPat save.") );
-        KIO::NetAccess::removeTempFile( fileName );
         return false;
     }
 
     if ( !m_dealer_map.contains( gameId ) )
     {
         KMessageBox::error( this, i18n("Unrecognized game id.") );
-        KIO::NetAccess::removeTempFile( fileName );
         return false;
     }
 
     // Only bother the user to ask for permission after we've determined the
     // save game file is at least somewhat valid.
     if ( m_dealer && !m_dealer->allowedToStartNewGame() )
-    {
-        KIO::NetAccess::removeTempFile( fileName );
         return false;
-    }
 
     setGameType( gameId );
 
     xml.clear();
-    file.reset();
 
-    bool success = isLegacyFile ? m_dealer->loadLegacyFile( &file )
-                                : m_dealer->loadFile( &file );
-
-    file.close();
-    KIO::NetAccess::removeTempFile( fileName );
+    QBuffer buffer;
+    buffer.setData( job->data() );
+    buffer.open( QBuffer::ReadOnly );
+    bool success = isLegacyFile ? m_dealer->loadLegacyFile( &buffer )
+                                : m_dealer->loadFile( &buffer );
 
     if ( !success )
     {
@@ -904,17 +920,22 @@ bool MainWindow::loadGame( const KUrl & url, bool addToRecentFiles )
 
 void MainWindow::loadGame()
 {
-    KFileDialog dialog( dialogUrl, "", this, 0 );
-    dialog.setOperationMode( KFileDialog::Opening );
-    dialog.setMimeFilter( QStringList() << saveFileMimeType << legacySaveFileMimeType << "all/allfiles" );
-    dialog.setCaption( i18n("Load") );
+    QPointer<QFileDialog> dialog = new QFileDialog(this);
+    dialog->selectUrl(dialogUrl);
+    dialog->setAcceptMode( QFileDialog::AcceptOpen );
+    dialog->setMimeTypeFilters( QStringList() << saveFileMimeType << legacySaveFileMimeType << QStringLiteral("all/allfiles") );
+    dialog->setWindowTitle( i18n("Load") );
 
-    if ( dialog.exec() == KFileDialog::Accepted )
+    if ( dialog->exec() == QFileDialog::Accepted )
     {
-        KUrl url = dialog.selectedUrl();
-        if ( !url.isEmpty() )
-            loadGame( url, true );
+        if ( dialog )
+        {
+            QUrl url = dialog->selectedUrls().at(0);
+            if ( !url.isEmpty() )
+                loadGame( url, true );
+        }
     }
+    delete dialog;
 }
 
 void MainWindow::saveGame()
@@ -922,20 +943,25 @@ void MainWindow::saveGame()
     if ( !m_dealer )
         return;
 
-    KFileDialog dialog( dialogUrl, "", this, 0 );
-    dialog.setOperationMode( KFileDialog::Saving );
-    dialog.setMimeFilter( QStringList() << saveFileMimeType << legacySaveFileMimeType, saveFileMimeType );
-    dialog.setConfirmOverwrite( true );
-    dialog.setCaption( i18n("Save") );
-    if ( dialog.exec() != KFileDialog::Accepted )
+    QPointer<QFileDialog> dialog = new QFileDialog( this );
+    dialog->selectUrl(dialogUrl);
+    dialog->setAcceptMode( QFileDialog::AcceptSave );
+    dialog->setMimeTypeFilters( QStringList() << saveFileMimeType << legacySaveFileMimeType );
+    dialog->setConfirmOverwrite( true );
+    dialog->setWindowTitle( i18n("Save") );
+    if ( dialog->exec() != QFileDialog::Accepted )
         return;
 
-    KUrl url = dialog.selectedUrl();
-    if ( url.isEmpty() )
-        return;
+    QUrl url;
+    if ( dialog )
+    {
+        url = dialog->selectedUrls().at(0);
+        if ( url.isEmpty() )
+            return;
+    }
 
     QFile localFile;
-    KTemporaryFile tempFile;
+    QTemporaryFile tempFile;
     if ( url.isLocalFile() )
     {
         localFile.setFileName( url.toLocalFile() );
@@ -954,8 +980,7 @@ void MainWindow::saveGame()
         }
     }
     QFile & file = url.isLocalFile() ? localFile : tempFile;
-
-    if ( dialog.currentFilterMimeType()->is( legacySaveFileMimeType ) )
+    if ( dialog && dialog->selectedNameFilter() == legacySaveFileMimeType )
     {
         m_dealer->saveLegacyFile( &file );
     }
@@ -963,13 +988,17 @@ void MainWindow::saveGame()
     {
         m_dealer->saveFile( &file );
     }
-
     file.close();
 
-    if ( !url.isLocalFile() && !KIO::NetAccess::upload( file.fileName(), url, this ) )
+    if ( !url.isLocalFile() )
     {
-        KMessageBox::error( this, i18n("Error uploading file. Saving failed.") );
-        return;
+        tempFile.open();
+        KIO::StoredTransferJob *job = KIO::storedPut( &tempFile, url, -1 );
+        if( !job->exec() )
+        {
+            KMessageBox::error( this, i18n("Error uploading file. Saving failed: %1", job->errorString()) );
+            return;
+        }
     }
 
     m_recentFilesAction->addUrl( url );
@@ -1006,16 +1035,16 @@ void MainWindow::slotSnapshot()
     m_dealer->setAutoDropEnabled( false );
     startRandom();
 
-    QTimer::singleShot( 1000, this, SLOT(slotSnapshot2()) );
+    QTimer::singleShot( 1000, this, &MainWindow::slotSnapshot2 );
 }
 
 void MainWindow::slotSnapshot2()
 {
-    m_dealer->createDump().save( QString( "%1.png" ).arg( m_dealer->gameId() ) );
+    m_dealer->createDump().save( QStringLiteral( "%1.png" ).arg( m_dealer->gameId() ) );
 
     ++m_dealer_it;
     if ( m_dealer_it != m_dealer_map.constEnd() )
-        QTimer::singleShot( 0, this, SLOT(slotSnapshot()) );
+        QTimer::singleShot( 0, this, &MainWindow::slotSnapshot );
 }
 
 
@@ -1041,10 +1070,10 @@ void MainWindow::generateThemePreview()
 
     p.end();
 
-    img.save( "preview.png" );
+    img.save( QStringLiteral("preview.png") );
 
     m_view->setMinimumSize( 0, 0 );
     m_view->setMaximumSize( QWIDGETSIZE_MAX, QWIDGETSIZE_MAX );
 }
 
-#include "mainwindow.moc"
+

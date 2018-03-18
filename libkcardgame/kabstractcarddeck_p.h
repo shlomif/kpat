@@ -22,17 +22,16 @@
 #include "kabstractcarddeck.h"
 
 #include "kcardtheme.h"
+#include <KImageCache>
 
-class KImageCache;
-
-#include <QtCore/QHash>
+#include <QHash>
 class QImage;
-#include <QtCore/QMutex>
-#include <QtCore/QSet>
-#include <QtCore/QSizeF>
-#include <QtCore/QStringList>
-#include <QtCore/QThread>
-#include <QtGui/QPixmap>
+#include <QMutex>
+#include <QSet>
+#include <QSizeF>
+#include <QStringList>
+#include <QThread>
+#include <QPixmap>
 class QSvgRenderer;
 
 
@@ -42,7 +41,7 @@ class RenderingThread : public QThread
 
 public:
     RenderingThread( KAbstractCardDeckPrivate * d, QSize size, const QStringList & elements );
-    void run();
+    void run() Q_DECL_OVERRIDE;
     void halt();
 
 Q_SIGNALS:
@@ -69,7 +68,7 @@ class KAbstractCardDeckPrivate : public QObject
     Q_OBJECT
 
 public:
-    KAbstractCardDeckPrivate( KAbstractCardDeck * q );
+    explicit KAbstractCardDeckPrivate( KAbstractCardDeck * q );
     ~KAbstractCardDeckPrivate();
 
     QSvgRenderer * renderer();

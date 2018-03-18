@@ -20,13 +20,13 @@
 
 #include <KConfig>
 #include <KConfigGroup>
-#include <KGlobal>
-#include <KStandardDirs>
 
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
-#include <QtCore/QSet>
-#include <QtCore/QSharedData>
+
+#include <QDir>
+#include <QFileInfo>
+#include <QSet>
+#include <QSharedData>
+#include <QStandardPaths>
 
 
 class KCardThemePrivate : public QSharedData
@@ -62,13 +62,19 @@ public:
 QList<KCardTheme> KCardTheme::findAll()
 {
     QList<KCardTheme> result;
-    QStringList indexFiles = KGlobal::dirs()->findAllResources( "data", "carddecks/*/index.desktop" );
-    foreach ( const QString & indexFilePath, indexFiles )
-    {
-        QString directoryName = QFileInfo( indexFilePath ).dir().dirName();
-        KCardTheme t( directoryName );
-        if ( t.isValid() )
-            result << t;
+    QStringList indexFiles = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, QStringLiteral("carddecks"), QStandardPaths::LocateDirectory );
+    Q_FOREACH (const QString &index, indexFiles) {
+        const QStringList entries = QDir(index).entryList(QDir::Dirs);
+        Q_FOREACH (const QString &d, entries) {
+            QString indexFilePath = index + '/' + d + "/index.desktop";
+            if (QFile::exists(indexFilePath)) {
+                QString directoryName = QFileInfo( indexFilePath ).dir().dirName();
+                KCardTheme t( directoryName );
+                if ( t.isValid() )
+                    result << t;
+
+            }
+        }
     }
     return result;
 }
@@ -76,15 +82,20 @@ QList<KCardTheme> KCardTheme::findAll()
 
 QList<KCardTheme> KCardTheme::findAllWithFeatures( const QSet<QString> & neededFeatures )
 {
-    QStringList indexFiles = KGlobal::dirs()->findAllResources( "data", "carddecks/*/index.desktop" );
-
     QList<KCardTheme> result;
-    foreach ( const QString & indexFilePath, indexFiles )
-    {
-        QString directoryName = QFileInfo( indexFilePath ).dir().dirName();
-        KCardTheme t( directoryName );
-        if ( t.isValid() && t.supportedFeatures().contains( neededFeatures ) )
-            result << t;
+    QStringList indexFiles = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, QStringLiteral("carddecks"), QStandardPaths::LocateDirectory );
+    Q_FOREACH (const QString &index, indexFiles) {
+        const QStringList entries = QDir(index).entryList(QDir::Dirs);
+        Q_FOREACH (const QString &d, entries) {
+            QString indexFilePath = index + '/' + d + "/index.desktop";
+            if (QFile::exists(indexFilePath)) {
+                QString directoryName = QFileInfo( indexFilePath ).dir().dirName();
+                KCardTheme t( directoryName );
+                if ( t.isValid() && t.supportedFeatures().contains( neededFeatures ) )
+                    result << t;
+
+            }
+        }
     }
     return result;
 }
@@ -105,7 +116,7 @@ KCardTheme::KCardTheme( const QString & dirName )
     QStringList supportedFeatures;
     QDateTime lastModified;
 
-    QString indexFilePath = KGlobal::dirs()->findResource( "data", QString( "carddecks/%1/index.desktop" ).arg( dirName ) );
+    QString indexFilePath = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral( "carddecks/%1/index.desktop" ).arg( dirName ) );
     if ( !indexFilePath.isEmpty() )
     {
         desktopFilePath = indexFilePath;
@@ -117,7 +128,7 @@ KCardTheme::KCardTheme( const QString & dirName )
 
             displayName = configGroup.readEntry( "Name" );
 
-            supportedFeatures = configGroup.readEntry( "Features", QStringList() << "AngloAmerican" << "Backs1" );
+            supportedFeatures = configGroup.readEntry( "Features", QStringList() << QStringLiteral("AngloAmerican") << QStringLiteral("Backs1") );
 
             QString svgName = configGroup.readEntry( "SVG" );
             if ( !svgName.isEmpty() )

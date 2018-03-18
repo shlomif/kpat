@@ -40,7 +40,7 @@
 #include "dealerinfo.h"
 #include "patsolve/mod3solver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 
 
 Mod3::Mod3( const DealerInfo * di )
@@ -63,15 +63,15 @@ void Mod3::initialize()
     // This patience uses 2 deck of cards.
     setDeckContents( 2 );
 
-    talon = new PatPile( this, 0, "talon" );
+    talon = new PatPile( this, 0, QStringLiteral("talon") );
     talon->setPileRole(PatPile::Stock);
     talon->setLayoutPos(rightColumX, bottomRowY);
     talon->setSpread(0, 0);
     talon->setKeyboardSelectHint( KCardPile::NeverFocus );
     talon->setKeyboardDropHint( KCardPile::NeverFocus );
-    connect( talon, SIGNAL(clicked(KCard*)), SLOT(drawDealRowOrRedeal()) );
+    connect( talon, &KCardPile::clicked, this, &DealerScene::drawDealRowOrRedeal );
 
-    aces = new PatPile( this, 50, "aces");
+    aces = new PatPile( this, 50, QStringLiteral("aces"));
     aces->setPileRole(PatPile::FoundationType1);
     aces->setLayoutPos(rightColumX, 0.5);
     aces->setBottomPadding( 2.5 );
@@ -83,7 +83,7 @@ void Mod3::initialize()
         for ( int c = 0; c < 8; ++c )
         {
             int pileIndex = r * 10 + c  + 1;
-            QString objectName = QString( "stack%1_%2" ).arg( r ).arg( c );
+            QString objectName = QStringLiteral( "stack%1_%2" ).arg( r ).arg( c );
             stack[r][c] = new PatPile( this, pileIndex, objectName );
 
             // The first 3 rows are the playing field, the fourth is the store.
@@ -238,11 +238,11 @@ public:
       : DealerInfo(I18N_NOOP("Mod3"), Mod3Id)
     {}
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Mod3( this );
     }
 } mod3DealerInfo;
 
 
-#include "mod3.moc"
+

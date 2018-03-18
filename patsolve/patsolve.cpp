@@ -22,7 +22,7 @@
 
 #include "KCardDeck"
 
-#include <KDebug>
+#include <QDebug>
 
 #include <cctype>
 #include <cmath>
@@ -196,8 +196,9 @@ bool Solver::recursive(POSITION *parent)
         }
 #endif
         Total_positions++;
-        if ( Total_positions % 10000 == 0 )
-            kDebug() << "positions" << Total_positions;
+        if ( Total_positions % 10000 == 0 ) {
+            //qDebug() << "positions" << Total_positions;
+        }
 
         pos->move = *mp;                 /* struct copy */
         pos->cluster = 0;
@@ -363,7 +364,7 @@ int Treebytes;
 
 TREE *Solver::pack_position(void)
 {
-	int j, k, w;
+	int j, w;
 	quint8 *p;
 	TREE *node;
 
@@ -386,7 +387,6 @@ TREE *Solver::pack_position(void)
 		    p         p         p
 	*/
 
-	k = 0;
         quint16 *p2 = ( quint16* ) p;
 	for (w = 0; w < m_number_piles; ++w) {
 		j = Wpilenum[w];
@@ -420,7 +420,7 @@ array following the POSITION struct. */
 
 void Solver::unpack_position(POSITION *pos)
 {
-	int i, k, w;
+	int i, w;
 	quint8 c;
 	BUCKETLIST *l;
 
@@ -434,7 +434,7 @@ void Solver::unpack_position(POSITION *pos)
 		       j             j
 	*/
 
-	k = w = i = c = 0;
+	w = i = c = 0;
 	quint16 *p2 = ( quint16* )( (quint8 *)(pos->node) + sizeof(TREE) );
 	while (w < m_number_piles) {
                 i = *p2++;
@@ -1016,9 +1016,6 @@ int Solver::translate_pile(const KCardPile *pile, card_t *w, int size)
     Q_UNUSED( size );
         Q_ASSERT( pile->count() <= size );
 
-        card_t rank, suit;
-
-	rank = suit = NONE;
         for ( int i = 0; i < pile->count(); ++i )
         {
             KCard *c = pile->at( i );
@@ -1121,7 +1118,7 @@ POSITION *Solver::new_position(POSITION *parent, MOVE *m)
         }
         if ( Total_positions % 1000 == 1000 )
             print_layout();
-        kDebug() << "new" << dummy;
+        //qDebug() << "new" << dummy;
 #endif
 	p += sizeof(POSITION);
 	return pos;

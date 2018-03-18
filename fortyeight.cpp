@@ -41,7 +41,7 @@
 #include "speeds.h"
 #include "patsolve/fortyeightsolver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 
 
 Fortyeight::Fortyeight( const DealerInfo* di )
@@ -57,16 +57,16 @@ void Fortyeight::initialize()
 
     setDeckContents( 2 );
 
-    talon = new PatPile( this, 0, "talon" );
+    talon = new PatPile( this, 0, QStringLiteral("talon") );
     talon->setPileRole(PatPile::Stock);
     talon->setLayoutPos( 7 * dist_x, smallNeg );
     talon->setZValue(20);
     talon->setSpread(0, 0);
     talon->setKeyboardSelectHint( KCardPile::NeverFocus );
     talon->setKeyboardDropHint( KCardPile::NeverFocus );
-    connect( talon, SIGNAL(clicked(KCard*)), SLOT(drawDealRowOrRedeal()) );
+    connect( talon, &KCardPile::clicked, this, &DealerScene::drawDealRowOrRedeal );
 
-    pile = new PatPile( this, 20, "pile" );
+    pile = new PatPile( this, 20, QStringLiteral("pile") );
     pile->setPileRole(PatPile::Waste);
     pile->setLayoutPos( 6 * dist_x, smallNeg );
     pile->setLeftPadding( 6 * dist_x );
@@ -77,7 +77,7 @@ void Fortyeight::initialize()
 
     for ( int i = 0; i < 8; ++i )
     {
-        target[i] = new PatPile( this, 9 + i, QString( "target%1" ).arg( i ) );
+        target[i] = new PatPile( this, 9 + i, QStringLiteral( "target%1" ).arg( i ) );
         target[i]->setPileRole(PatPile::Foundation);
         target[i]->setLayoutPos(dist_x*i, 0);
         target[i]->setSpread(0, 0);
@@ -87,7 +87,7 @@ void Fortyeight::initialize()
 
     for ( int i = 0; i < 8; ++i )
     {
-        stack[i] = new PatPile( this, 1 + i, QString( "stack%1" ).arg( i ) );
+        stack[i] = new PatPile( this, 1 + i, QStringLiteral( "stack%1" ).arg( i ) );
         stack[i]->setPileRole(PatPile::Tableau);
         stack[i]->setLayoutPos(dist_x*i, 1.1 );
         stack[i]->setAutoTurnTop(true);
@@ -252,11 +252,11 @@ public:
       : DealerInfo(I18N_NOOP("Forty & Eight"), FortyAndEightId)
     {}
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Fortyeight( this );
     }
 } fortyEightDealerInfo;
 
 
-#include "fortyeight.moc"
+

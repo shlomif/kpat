@@ -43,7 +43,7 @@
 #include "speeds.h"
 #include "patsolve/klondikesolver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 #include <KSelectAction>
 
 
@@ -96,7 +96,7 @@ void Klondike::initialize()
 
     easyRules = Settings::klondikeIsDrawOne();
 
-    talon = new PatPile( this, 0, "talon" );
+    talon = new PatPile( this, 0, QStringLiteral("talon") );
     talon->setPileRole(PatPile::Stock);
     talon->setLayoutPos(0, 0);
     // Give the talon a low Z value to keep it out of the way during there
@@ -104,9 +104,9 @@ void Klondike::initialize()
     talon->setZValue( -52 );
     talon->setKeyboardSelectHint( KCardPile::NeverFocus );
     talon->setKeyboardDropHint( KCardPile::NeverFocus );
-    connect( talon, SIGNAL(clicked(KCard*)), SLOT(drawDealRowOrRedeal()) );
+    connect( talon, &KCardPile::clicked, this, &DealerScene::drawDealRowOrRedeal );
 
-    pile = new KlondikePile( this, 13, "pile" );
+    pile = new KlondikePile( this, 13, QStringLiteral("pile") );
     pile->setCardsToShow( easyRules ? 1 : 3 );
     pile->setPileRole( PatPile::Waste );
     pile->setRightPadding( 1.1 );
@@ -117,7 +117,7 @@ void Klondike::initialize()
 
     for( int i = 0; i < 7; ++i )
     {
-        play[i] = new PatPile( this, i + 5, QString( "play%1" ).arg( i ));
+        play[i] = new PatPile( this, i + 5, QStringLiteral( "play%1" ).arg( i ));
         play[i]->setPileRole(PatPile::Tableau);
         play[i]->setLayoutPos((1.0 + hspacing) * i, 1.0 + vspacing);
         play[i]->setAutoTurnTop(true);
@@ -129,7 +129,7 @@ void Klondike::initialize()
 
     for( int i = 0; i < 4; ++i )
     {
-        target[i] = new PatPile( this, i + 1, QString( "target%1" ).arg( i ) );
+        target[i] = new PatPile( this, i + 1, QStringLiteral( "target%1" ).arg( i ) );
         target[i]->setPileRole(PatPile::Foundation);
         target[i]->setLayoutPos((3 + i) * (1.0 + hspacing), 0);
         target[i]->setKeyboardSelectHint( KCardPile::ForceFocusTop );
@@ -144,7 +144,7 @@ void Klondike::initialize()
     options->addAction( i18n("Draw 1" ));
     options->addAction( i18n("Draw 3" ));
     options->setCurrentItem( easyRules ? 0 : 1 );
-    connect( options, SIGNAL(triggered(int)), SLOT(gameTypeChanged()) );
+    connect(options, static_cast<void (KSelectAction::*)(int)>(&KSelectAction::triggered), this, &Klondike::gameTypeChanged);
 }
 
 bool Klondike::checkAdd(const PatPile * pile, const QList<KCard*> & oldCards, const QList<KCard*> & newCards) const
@@ -351,11 +351,11 @@ public:
         addSubtype( KlondikeDrawThreeId, I18N_NOOP( "Klondike (Draw 3)" ) );
     }
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Klondike( this );
     }
 } klondikeDealerInfo;
 
 
-#include "klondike.moc"
+

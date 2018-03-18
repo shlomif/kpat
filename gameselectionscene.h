@@ -19,8 +19,8 @@
 #ifndef GAMESELECTIONSCENE_H
 #define GAMESELECTIONSCENE_H
 
-#include <QtCore/QSignalMapper>
-#include <QtGui/QGraphicsScene>
+#include <QSignalMapper>
+#include <QGraphicsScene>
 
 
 class GameSelectionScene : public QGraphicsScene
@@ -30,7 +30,7 @@ class GameSelectionScene : public QGraphicsScene
     class GameSelectionBox;
 
 public:
-    GameSelectionScene( QObject * parent );
+    explicit GameSelectionScene( QObject * parent );
     ~GameSelectionScene();
 
     void resizeScene( const QSize & size );
@@ -39,7 +39,7 @@ signals:
     void gameSelected( int i );
 
 protected:
-    virtual void keyReleaseEvent( QKeyEvent * event );
+    void keyReleaseEvent( QKeyEvent * event ) Q_DECL_OVERRIDE;
 
 private slots:
     void boxHoverChanged( GameSelectionBox * box, bool hovered );

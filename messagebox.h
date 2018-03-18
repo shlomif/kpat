@@ -20,7 +20,7 @@
 
 #include <KGameRenderedItem>
 
-#include <QtGui/QFont>
+#include <QFont>
 
 
 class MessageBox : public KGameRenderedItem
@@ -34,7 +34,7 @@ public:
     void setSize( const QSize & size );
     QSize size() const;
 
-    virtual void paint( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget );
+    void paint( QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget ) Q_DECL_OVERRIDE;
 
 private:
     QString m_message;

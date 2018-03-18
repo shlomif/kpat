@@ -27,13 +27,16 @@ class Simon;
 class SimonSolver : public FcSolveSolver
 {
 public:
-    SimonSolver(const Simon *dealer);
+<<<<<<< HEAD
+    explicit SimonSolver(const Simon *dealer);
 #if 0
-    virtual bool isWon();
-    virtual void make_move(MOVE *m);
-    virtual void undo_move(MOVE *m);
-    virtual int getOuts();
-    virtual unsigned int getClusterNumber();
+    int get_possible_moves(int *a, int *numout) Q_DECL_OVERRIDE;
+    int get_possible_moves(int *a, int *numout) Q_DECL_OVERRIDE;
+    bool isWon() Q_DECL_OVERRIDE;
+    void make_move(MOVE *m) Q_DECL_OVERRIDE;
+    void undo_move(MOVE *m) Q_DECL_OVERRIDE;
+    int getOuts() Q_DECL_OVERRIDE;
+    unsigned int getClusterNumber() Q_DECL_OVERRIDE;
 #endif
     virtual void translate_layout();
     virtual MoveHint translateMove(const MOVE &m);

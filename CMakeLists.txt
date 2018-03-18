@@ -1,31 +1,50 @@
-project( kpat )
+project(kpat)
 
-if(NOT COMPILING_KDEGAMES)
-	find_package(KDE4 REQUIRED)
-	include(KDE4Defaults)
-	include(MacroLibrary)
-	find_package(KDEGames 4.9.0 REQUIRED)
-
-	add_definitions(${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
-	add_definitions(-DQT_USE_FAST_CONCATENATION -DQT_USE_FAST_OPERATOR_PLUS)
-	include_directories(${KDEGAMES_INCLUDE_DIRS} ${KDE4_INCLUDES} ${QDBUS_INCLUDE_DIRS})
-endif(NOT COMPILING_KDEGAMES)
-
-include(FindPkgConfig)
+cmake_minimum_required (VERSION 2.8.12 FATAL_ERROR)
+set (QT_MIN_VERSION "5.7.0")
+set (KF5_MIN_VERSION "5.30.0")
 
 pkg_check_modules(FC_SOLVE REQUIRED libfreecell-solver)
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED CONFIG)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/libkcardgame/include ${FC_SOLVE_INCLUDE_DIRS})
+find_package(Qt5 ${QT_MIN_VERSION} REQUIRED NO_MODULE COMPONENTS Widgets Svg)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+    Completion
+    Config
+    ConfigWidgets
+    CoreAddons
+    Crash
+    DBusAddons
+    DocTools
+    GuiAddons
+    I18n
+    KIO
+    NewStuff
+    WidgetsAddons
+    XmlGui
+)
 
-add_subdirectory( icons )
-add_subdirectory( libkcardgame )
-add_subdirectory( mimetypes )
-add_subdirectory( previews )
-add_subdirectory( sounds )
-add_subdirectory( themes )
-add_subdirectory( doc )
+find_package(KF5KDEGames 4.9.0 REQUIRED)
 
-set(RELEASE "1")
+include(FeatureSummary)
+include(ECMAddAppIcon)
+include(ECMInstallIcons)
+include(KDEInstallDirs)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(KDECMakeSettings)
+
+add_definitions(-DQT_USE_FAST_CONCATENATION -DQT_USE_FAST_OPERATOR_PLUS)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libkcardgame/include)
+
+add_subdirectory(icons)
+add_subdirectory(libkcardgame)
+add_subdirectory(mimetypes)
+add_subdirectory(previews)
+add_subdirectory(sounds)
+add_subdirectory(themes)
+add_subdirectory(doc)
 
 set(kpat_SRCS ${libfcs_SRCS}
    clock.cpp
@@ -71,15 +90,28 @@ set(kpat_SRCS ${libfcs_SRCS}
    yukon.cpp
 )
 
-kde4_add_ui_files( kpat_SRCS statisticsdialog.ui )
-kde4_add_kcfg_files( kpat_SRCS settings.kcfgc )
-kde4_add_app_icon( kpat_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/icons/hi*-app-kpat.png" )
-kde4_add_executable( kpat ${kpat_SRCS} )
-target_link_libraries( kpat kcardgame kdegames ${KDE4_KIO_LIBS} ${KDE4_PHONON_LIBS} ${FC_SOLVE_LIBRARIES} )
-install( TARGETS kpat ${INSTALL_TARGETS_DEFAULT_ARGS} )
+ki18n_wrap_ui( kpat_SRCS statisticsdialog.ui )
+kconfig_add_kcfg_files( kpat_SRCS settings.kcfgc )
+
+file(GLOB ICONS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/icons/*-apps-kpat.png")
+ecm_add_app_icon(kpat_SRCS ICONS ${ICONS_SRCS})
+add_executable(kpat ${kpat_SRCS})
+target_link_libraries(kpat
+    KF5::Crash
+    KF5::DBusAddons
+    KF5::I18n
+    KF5::KIOCore
+    KF5KDEGames
+    kcardgame
+    ${FC_SOLVE_LIBRARIES}
+)
+
+install(TARGETS kpat ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 
 ########### install files ###############
 
-install( PROGRAMS kpat.desktop  DESTINATION  ${XDG_APPS_INSTALL_DIR} )
-install( FILES kpatui.rc  DESTINATION  ${DATA_INSTALL_DIR}/kpat )
-install( FILES kpat.kcfg DESTINATION ${KCFG_INSTALL_DIR} )
+install(PROGRAMS org.kde.kpat.desktop  DESTINATION  ${KDE_INSTALL_APPDIR})
+install(FILES kpatui.rc  DESTINATION  ${KDE_INSTALL_KXMLGUI5DIR}/kpat)
+install(FILES kpat.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR})
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

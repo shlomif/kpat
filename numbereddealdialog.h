@@ -20,12 +20,12 @@
 #define NUMBEREDDEALDIALOG_H
 
 class KComboBox;
-#include <KDialog>
+#include <QDialog>
 
-#include <QtCore/QMap>
+#include <QMap>
 class QSpinBox;
 
-class NumberedDealDialog : public KDialog
+class NumberedDealDialog : public QDialog
 {
     Q_OBJECT
 
@@ -35,7 +35,7 @@ class NumberedDealDialog : public KDialog
         void setDealNumber( int dealNumber );
 
     public slots:
-        virtual void setVisible( bool visible );
+        void setVisible( bool visible ) Q_DECL_OVERRIDE;
 
     signals:
         void dealChosen( int gameId, int dealNumber );

@@ -39,7 +39,7 @@
 #include "dealerinfo.h"
 #include "patsolve/clocksolver.h"
 
-#include <KLocale>
+#include <KLocalizedString>
 
 
 Clock::Clock( const DealerInfo * di )
@@ -59,7 +59,7 @@ void Clock::initialize()
 
     for ( int i = 0; i < 12; ++i )
     {
-        target[i] = new PatPile( this, i + 1, QString("target%1").arg(i) );
+        target[i] = new PatPile( this, i + 1, QStringLiteral("target%1").arg(i) );
         target[i]->setPileRole(PatPile::Foundation);
         target[i]->setLayoutPos(4 * dist_x + 0.4 + xs[i], 0.2 + ys[i]);
         target[i]->setSpread(0, 0);
@@ -69,7 +69,7 @@ void Clock::initialize()
 
     for ( int i = 0; i < 8; ++i )
     {
-        store[i] = new PatPile( this, 14 + i, QString("store%1").arg(i) );
+        store[i] = new PatPile( this, 14 + i, QStringLiteral("store%1").arg(i) );
         store[i]->setPileRole(PatPile::Tableau);
         store[i]->setLayoutPos(dist_x*(i%4), 2.5 * (i/4));
         store[i]->setBottomPadding( 1.3 );
@@ -155,11 +155,11 @@ public:
       : DealerInfo(I18N_NOOP("Grandfather's Clock"), GrandfathersClockId)
     {}
 
-    virtual DealerScene *createGame() const
+    DealerScene *createGame() const Q_DECL_OVERRIDE
     {
         return new Clock( this );
     }
 } clockDealerInfo;
 
 
-#include "clock.moc"
+

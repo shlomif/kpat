@@ -27,7 +27,7 @@
 
 #include "../simon.h"
 
-#include <KDebug>
+#include <QDebug>
 
 const int CHUNKSIZE = 100;
 const long int MAX_ITERS_LIMIT = 200000;
@@ -40,7 +40,7 @@ const long int MAX_ITERS_LIMIT = 200000;
 void SimonSolver::make_move(MOVE *m)
 {
 #if PRINT
-    kDebug() << "\n\nmake_move\n";
+    //qDebug() << "\n\nmake_move\n";
     if ( m->totype == O_Type )
         fprintf( stderr, "move %d from %d out (at %d) Prio: %d\n\n", m->card_index, m->from, m->turn_index, m->pri );
     else
@@ -94,7 +94,7 @@ void SimonSolver::make_move(MOVE *m)
 void SimonSolver::undo_move(MOVE *m)
 {
 #if PRINT
-    kDebug() << "\n\nundo_move\n";
+    //qDebug() << "\n\nundo_move\n";
     if ( m->totype == O_Type )
         fprintf( stderr, "move %d from %d out (at %d)\n\n", m->card_index, m->from, m->turn_index );
     else
@@ -263,8 +263,6 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
         conti[j]++;
     }
 
-    bool foundgood = false;
-
     for(int i=0; i<10; ++i)
     {
         int len = Wlen[i];
@@ -294,10 +292,6 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
                      RANK(card) == RANK(*Wp[j]) - 1 )
                 {
                     allowed = true;
-#if 0
-                    if ( ( SUIT( card ) != SUIT( *Wp[j] ) ) && foundgood )
-                        allowed = false; // make the tree simpler
-#endif
                 }
                 if ( Wlen[j] == 0 && !wasempty )
                 {
@@ -314,11 +308,6 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
                          !DOWN( card_below ) &&
                          RANK( card_below ) == RANK( card ) + 1 )
                     {
-#if 0
-                        printcard( card_below, stderr );
-                        printcard( card, stderr );
-                        fprintf( stderr, "%d %d %d %d %d\n", i, j, conti[i], conti[j],l );
-#endif
                         if ( conti[j]+l != 13 || conti[i]>conti[j]+l || SUIT( card ) != SUIT( *Wp[j] ) ) {
                             // fprintf( stderr, "continue\n" );
                             continue;
@@ -338,13 +327,13 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
                     if ( cont )
                         cont += l;
                     mp->pri = 8 * cont + qMax( 0, 10 - Wlen[i] );
-                    if ( Wlen[j] )
-                        if ( SUIT( card ) != SUIT( *Wp[j] ) )
+                    if ( Wlen[j] ) {
+                        if ( SUIT( card ) != SUIT( *Wp[j] ) ) {
                             mp->pri /= 2;
-                        else
-                            foundgood = true;
-                    else
+                        }
+                    } else {
                         mp->pri = 2; // TODO: it should depend on the actual stack's order
+                    }
                     if ( Wlen[i] == l+1 )
                         mp->pri = qMin( 127, mp->pri + 20 );
                     else
@@ -357,12 +346,6 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
                         card_t top = W[i][Wlen[i]-l-2];
                         card_t theone = W[i][Wlen[i]-conti_pos-1];
                         card_t below = W[i][Wlen[i]-conti_pos-2];
-#if 0
-                        printcard( top, stderr );
-                        printcard( theone, stderr );
-                        printcard( below, stderr );
-                        fputc( '\n', stderr );
-#endif
                         if ( SUIT( top ) != SUIT( below ) || DOWN( below ) )
                             break;
                         if ( RANK( theone ) !=
