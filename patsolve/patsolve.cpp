@@ -91,7 +91,6 @@ void Solver::hashpile(int w)
 
 #define MAXDEPTH 400
 
-#if 0
 bool Solver::recursive(POSITION *parent)
 {
     int i, alln, a, numout = 0;
@@ -222,7 +221,6 @@ bool Solver::recursive(POSITION *parent)
     }
     return fit;
 }
-#endif
 
 
 /* Generate an array of the moves we can make from this position. */
@@ -890,11 +888,9 @@ Solver::Solver()
 
     Wlen = nullptr;
 
-    Whash = 0;
-    Wpilenum = 0;
-    Stack = 0;
-
-    m_number_piles = 0;
+    Whash = nullptr;
+    Wpilenum = nullptr;
+    Stack = nullptr;
 }
 
 Solver::~Solver()
