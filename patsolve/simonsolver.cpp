@@ -495,7 +495,7 @@ void SimonSolver::print_layout()
 
 MoveHint SimonSolver::translateMove( const MOVE &m )
 {
-    fcs_move_t move = *(static_cast<fcs_move_t *>(m.ptr));
+    fcs_move_t move = m.fcs;
     int cards = fcs_move_get_num_cards_in_seq(move);
     PatPile *from = 0;
     PatPile *to = 0;
@@ -538,8 +538,6 @@ MoveHint SimonSolver::translateMove( const MOVE &m )
     }
 
     Q_ASSERT(to);
-
-    delete ((fcs_move_t *)m.ptr);
 
     return MoveHint(card, to, 0);
 

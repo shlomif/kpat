@@ -28,6 +28,7 @@
 #include <QMutex>
 
 #include <cstdio>
+#include "freecell-solver/fcs_user.h"
 
 
 /* A card is represented as ( down << 6 ) + (suit << 4) + rank. */
@@ -46,7 +47,7 @@ public:
     PileType totype;
     signed char pri;        /* move priority (low priority == low value) */
     int turn_index;         /* turn the card index */
-    void * ptr;             /* A ptr for whatever else we'd like to hold. */
+    fcs_move_t fcs;         /* A Freecell Solver move. */
 
     bool operator<( const MOVE &m) const
     {

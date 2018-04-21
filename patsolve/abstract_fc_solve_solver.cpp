@@ -161,7 +161,6 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
                     while (freecell_solver_user_get_moves_left(solver_instance))
                     {
                         fcs_move_t move;
-                        fcs_move_t * move_ptr;
                         MOVE new_move;
                         const int verdict = !freecell_solver_user_get_next_move(
                                                                 solver_instance, &move)
@@ -169,9 +168,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
 
                         Q_ASSERT (verdict);
 
-                        move_ptr = new fcs_move_t;
-                        *move_ptr = move;
-                        new_move.ptr = (void *)move_ptr;
+                        new_move.fcs = move;
 
                         winMoves.append( new_move );
                     }
