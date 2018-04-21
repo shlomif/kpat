@@ -3,7 +3,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of 
+ * published by the Free Software Foundation; either version 2 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -88,7 +88,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
         }
 
         /*  Not needed for Simple Simon because it's already specified in
-         *  freecell_solver_cmd_line_args. TODO : abstract . 
+         *  freecell_solver_cmd_line_args. TODO : abstract .
          *
          *      Shlomi Fish
          *  */
@@ -101,8 +101,8 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
     if (solver_instance)
     {
         bool continue_loop = true;
-        while (continue_loop && 
-                (   (solver_ret == FCS_STATE_NOT_BEGAN_YET) 
+        while (continue_loop &&
+                (   (solver_ret == FCS_STATE_NOT_BEGAN_YET)
                  || (solver_ret == FCS_STATE_SUSPEND_PROCESS))
                     &&
                  (current_iters_count < MAX_ITERS_LIMIT)
@@ -110,10 +110,10 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
         {
             current_iters_count += CHUNKSIZE;
             freecell_solver_user_limit_iterations(solver_instance, current_iters_count);
-            
+
             if (solver_ret == FCS_STATE_NOT_BEGAN_YET)
             {
-                solver_ret = 
+                solver_ret =
                     freecell_solver_user_solve_board(
                         solver_instance,
                         board_as_string
@@ -125,7 +125,10 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
             {
                 solver_ret = freecell_solver_user_resume_solution(solver_instance);
             }
-
+#if 0
+            std::cerr << "quouoouou solver_instance = " << solver_instance
+                << " solver_ret = " << solver_ret << std::endl;
+#endif
             {
                 QMutexLocker lock( &endMutex );
                 if ( m_shouldEnd )
@@ -149,7 +152,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
                 << " solver_ret = " << solver_ret << std::endl;
 #endif
             return Solver::NoSolutionExists;
-        
+
         case FCS_STATE_WAS_SOLVED:
             {
                 if (solver_instance)
@@ -160,26 +163,27 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
                         fcs_move_t move;
                         fcs_move_t * move_ptr;
                         MOVE new_move;
+                        const int verdict = !freecell_solver_user_get_next_move(
+                                                                solver_instance, &move)
+                            ;
 
-                        Q_ASSERT (!freecell_solver_user_get_next_move(
-                                    solver_instance, &move)
-                        );
-                        
+                        Q_ASSERT (verdict);
+
                         move_ptr = new fcs_move_t;
                         *move_ptr = move;
                         new_move.ptr = (void *)move_ptr;
 
                         winMoves.append( new_move );
                     }
-                   
+
                     freecell_solver_user_free(solver_instance);
                     solver_instance = NULL;
                 }
 #if 0
-            std::cerr << "WAS_SOLVED solver_instance = " << solver_instance
+            std::cerr << "was_solved solver_instance = " << solver_instance
                 << " solver_ret = " << solver_ret << std::endl;
 #endif
-                
+
                 return Solver::SolutionExists;
             }
 
@@ -188,7 +192,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
             std::cerr << "SUSPEND_PROCESS solver_instance = " << solver_instance
                 << " solver_ret = " << solver_ret << std::endl;
 #endif
-            
+
             return Solver::UnableToDetermineSolvability;
 
         default:
@@ -201,7 +205,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
             std::cerr << "UNKNOWN solver_instance = " << solver_instance
                 << " solver_ret = " << solver_ret << std::endl;
 #endif
-            
+
             return Solver::NoSolutionExists;
     }
 }
@@ -220,7 +224,7 @@ bool FcSolveSolver::isWon()
 
 int FcSolveSolver::getOuts()
 {
-    return 0; 
+    return 0;
 }
 
 FcSolveSolver::FcSolveSolver()
