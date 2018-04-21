@@ -20,7 +20,6 @@
 
 #include "abstract_fc_solve_solver.h"
 #include "simon.h"
-
 class Simon;
 
 
@@ -30,33 +29,26 @@ public:
     explicit SimonSolver(const Simon *dealer);
 #if 0
     int get_possible_moves(int *a, int *numout) Q_DECL_OVERRIDE;
-    int get_possible_moves(int *a, int *numout) Q_DECL_OVERRIDE;
     bool isWon() Q_DECL_OVERRIDE;
     void make_move(MOVE *m) Q_DECL_OVERRIDE;
     void undo_move(MOVE *m) Q_DECL_OVERRIDE;
     int getOuts() Q_DECL_OVERRIDE;
     unsigned int getClusterNumber() Q_DECL_OVERRIDE;
 #endif
-    virtual void translate_layout();
-    virtual MoveHint translateMove(const MOVE &m);
+    virtual void translate_layout() Q_DECL_OVERRIDE;
+    virtual MoveHint translateMove(const MOVE &m) Q_DECL_OVERRIDE;
 #if 0
-    virtual int get_possible_moves(int *a, int *numout);
+    void unpack_cluster( unsigned int k ) Q_DECL_OVERRIDE;
+    void print_layout() Q_DECL_OVERRIDE;
 #endif
     virtual void setFcSolverGameParams();
 
     virtual int get_cmd_line_arg_count();
     virtual const char * * get_cmd_line_args();
 #if 0
-    virtual void print_layout();
-#endif
-
 /* Names of the cards.  The ordering is defined in pat.h. */
-
-#if 0
     int O[4];
 #endif
-
-private:
     const Simon *deal;
 };
 
