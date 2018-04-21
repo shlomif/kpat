@@ -221,7 +221,7 @@ QString Freecell::solverFormat() const
     if (!tmp.isEmpty())
     {
         QString a = QString::fromLatin1("Freecells: %1\n");
-        kDebug(11111) << "a is {{{{" << a << "}}}}" << endl;
+        // kDebug(11111) << "a is {{{{" << a << "}}}}" << endl;
         output += a.arg(tmp);
     }
 
@@ -233,7 +233,7 @@ QString Freecell::solverFormat() const
         output += '\n';
     }
     {
-        kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
+        // kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
     }
     return output;
 }

@@ -174,7 +174,7 @@ QString Simon::solverFormat() const
         output += '\n';
     }
     {
-        kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
+        // kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
     }
     return output;
 }

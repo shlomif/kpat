@@ -25,8 +25,6 @@
 
 #include "abstract_fc_solve_solver.h"
 
-#include <KDebug>
-
 const int CHUNKSIZE = 100;
 const long int MAX_ITERS_LIMIT = 200000;
 
