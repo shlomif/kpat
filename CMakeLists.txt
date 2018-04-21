@@ -1,10 +1,10 @@
 project(kpat)
-include(FindPkgConfig)
 
 cmake_minimum_required (VERSION 2.8.12 FATAL_ERROR)
 set (QT_MIN_VERSION "5.7.0")
 set (KF5_MIN_VERSION "5.30.0")
 
+include(FindPkgConfig)
 pkg_check_modules(FC_SOLVE REQUIRED libfreecell-solver)
 find_package(ECM ${KF5_MIN_VERSION} REQUIRED CONFIG)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
@@ -48,47 +48,47 @@ add_subdirectory(themes)
 add_subdirectory(doc)
 
 set(kpat_SRCS ${libfcs_SRCS}
-   clock.cpp
-   dealer.cpp
-   dealerinfo.cpp
-   fortyeight.cpp
-   freecell.cpp
-   freecell.cpp
-   gameselectionscene.cpp
-   golf.cpp
-   grandf.cpp
-   gypsy.cpp
-   idiot.cpp
-   klondike.cpp
-   main.cpp
-   mainwindow.cpp
-   messagebox.cpp
-   mod3.cpp
-   numbereddealdialog.cpp
-   patpile.cpp
+    main.cpp
+    dealer.cpp
+    dealerinfo.cpp
+    gameselectionscene.cpp
+    mainwindow.cpp
+    messagebox.cpp
+    numbereddealdialog.cpp
+    patpile.cpp
+    pileutils.cpp
+    renderer.cpp
+    soundengine.cpp
+    statisticsdialog.cpp
+    view.cpp
    patsolve/abstract_fc_solve_solver.cpp
-   patsolve/clocksolver.cpp
-   patsolve/fortyeightsolver.cpp
-   patsolve/freecellsolver.cpp
-   patsolve/golfsolver.cpp
-   patsolve/grandfsolver.cpp
-   patsolve/gypsysolver.cpp
-   patsolve/idiotsolver.cpp
-   patsolve/klondikesolver.cpp
-   patsolve/memory.cpp
-   patsolve/mod3solver.cpp
-   patsolve/patsolve.cpp
-   patsolve/simonsolver.cpp
-   patsolve/spidersolver.cpp
-   patsolve/yukonsolver.cpp
-   pileutils.cpp
-   renderer.cpp
-   simon.cpp
-   spider.cpp
-   soundengine.cpp
-   statisticsdialog.cpp
-   view.cpp
-   yukon.cpp
+    patsolve/memory.cpp
+    patsolve/patsolve.cpp
+
+    clock.cpp 
+    patsolve/clocksolver.cpp
+    fortyeight.cpp
+    patsolve/fortyeightsolver.cpp
+    freecell.cpp 
+    patsolve/freecellsolver.cpp
+    golf.cpp
+    patsolve/golfsolver.cpp
+    grandf.cpp
+    patsolve/grandfsolver.cpp
+    gypsy.cpp
+    patsolve/gypsysolver.cpp
+    idiot.cpp
+    patsolve/idiotsolver.cpp
+    klondike.cpp
+    patsolve/klondikesolver.cpp
+    mod3.cpp
+    patsolve/mod3solver.cpp
+    simon.cpp
+    patsolve/simonsolver.cpp
+    spider.cpp
+    patsolve/spidersolver.cpp
+    yukon.cpp
+    patsolve/yukonsolver.cpp
 )
 
 ki18n_wrap_ui( kpat_SRCS statisticsdialog.ui )
@@ -108,6 +108,7 @@ target_link_libraries(kpat
 )
 
 install(TARGETS kpat ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+
 
 ########### install files ###############
 
