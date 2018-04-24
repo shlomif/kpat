@@ -61,7 +61,7 @@ set(kpat_SRCS ${libfcs_SRCS}
     soundengine.cpp
     statisticsdialog.cpp
     view.cpp
-   patsolve/abstract_fc_solve_solver.cpp
+    patsolve/abstract_fc_solve_solver.cpp
     patsolve/memory.cpp
     patsolve/patsolve.cpp
 
