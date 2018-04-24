@@ -18,8 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <iostream>
-
 #include "freecell-solver/fcs_user.h"
 #include "freecell-solver/fcs_cl.h"
 
@@ -182,7 +180,6 @@ int SimonSolver::get_possible_moves(int *a, int *numout)
     n = 0;
     *a = 1;
 
-    std::cerr << "get_possible_moves() : solver_instance = " << solver_instance << std::endl;
     while (freecell_solver_user_get_moves_left(solver_instance))
     {
         fcs_move_t move;
@@ -425,10 +422,6 @@ void SimonSolver::translate_layout()
     }
 
     board_as_string = strdup(deal->solverFormat().toLatin1());
-
-#if 0
-    std::cerr << "trans_layout() : solver_instance = " << solver_instance << std::endl;
-#endif
 
     if (solver_instance)
     {

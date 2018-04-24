@@ -19,8 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <iostream>
-
 #include "freecell-solver/fcs_user.h"
 #include "freecell-solver/fcs_cl.h"
 
@@ -518,8 +516,6 @@ void FreecellSolver::translate_layout()
     }
 
     board_as_string = strdup(deal->solverFormat().toLatin1());
-
-    std::cerr << "translate_layout() : solver_instance = " << solver_instance << std::endl;
 
     if (solver_instance)
     {
