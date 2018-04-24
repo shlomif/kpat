@@ -147,10 +147,10 @@ void SimonSolver::undo_move(MOVE *m)
 }
 #endif
 
-#define CMD_LINE_ARGS_NUM 7
+#define CMD_LINE_ARGS_NUM 4
 static const char * freecell_solver_cmd_line_args[CMD_LINE_ARGS_NUM] =
 {
-"-g", "simple_simon", "-to", "abcdefgh", "-ni", "-to", "abcdefghi",
+    "-g", "simple_simon", "--load-config", "the-last-mohican"
 };
 
 int SimonSolver::get_cmd_line_arg_count()
