@@ -4,7 +4,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of 
+ * published by the Free Software Foundation; either version 2 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,41 +19,23 @@
 #ifndef PATSOLVE_H
 #define PATSOLVE_H
 
+#include "solverinterface.h"
 #include "../hint.h"
 #include "memory.h"
 
 #include "KCardPile"
 
+#include <atomic>
+#include <memory>
+#include <array>
+
 #include <QMap>
-#include <QMutex>
 
 #include <cstdio>
-#include "freecell-solver/fcs_user.h"
-
 
 /* A card is represented as ( down << 6 ) + (suit << 4) + rank. */
 
 typedef quint8 card_t;
-
-/* Represent a move. */
-
-enum PileType { O_Type = 1, W_Type };
-
-class MOVE {
-public:
-    int card_index;         /* the card we're moving (0 is the top)*/
-    quint8 from;            /* from pile number */
-    quint8 to;              /* to pile number */
-    PileType totype;
-    signed char pri;        /* move priority (low priority == low value) */
-    int turn_index;         /* turn the card index */
-    fcs_move_t fcs;         /* A Freecell Solver move. */
-
-    bool operator<( const MOVE &m) const
-    {
-	return pri < m.pri;
-    }
-};
 
 struct POSITION {
         POSITION *queue;      /* next position in the queue */
@@ -67,28 +49,26 @@ struct POSITION {
 
 class MemoryManager;
 
-class Solver
+template<size_t NumberPiles>
+struct Solver : public SolverInterface
 {
+
 public:
-    enum ExitStatus
-    {
-        MemoryLimitReached = -3,
-        SearchAborted = -2,
-        UnableToDetermineSolvability = -1,
-        NoSolutionExists = 0,
-        SolutionExists = 1
-    };
+    QList<MOVE> m_firstMoves;
+    QList<MOVE> m_winMoves;
+    std::atomic_bool m_shouldEnd;
+    int gy;
+public:
 
     Solver();
     virtual ~Solver();
     virtual ExitStatus patsolve( int max_positions = -1, bool debug = false);
     bool recursive(POSITION *pos = nullptr);
     virtual void translate_layout() = 0;
-    bool m_shouldEnd;
-    QMutex endMutex;
     virtual MoveHint translateMove(const MOVE &m ) = 0;
-    QList<MOVE> firstMoves;
-    QList<MOVE> winMoves;
+    void stopExecution() final;
+    QList<MOVE> firstMoves() const final;
+    QList<MOVE> winMoves() const final;
 
 protected:
     MOVE *get_moves(int *nmoves);
@@ -122,34 +102,30 @@ protected:
     virtual int getOuts() = 0;
     virtual unsigned int getClusterNumber() { return 0; }
     virtual void unpack_cluster( unsigned int  ) {}
-
-    void setNumberPiles( int i );
-    int m_number_piles;
-
     void init();
     void free();
 
     /* Work arrays. */
 
-    card_t **W; /* the workspace */
-    card_t **Wp;   /* point to the top card of each work pile */
-    int *Wlen;     /* the number of cards in each pile */
+    std::array<card_t*, NumberPiles> W;    /* the workspace */
+    std::array<card_t*, NumberPiles> Wp;   /* point to the top card of each work pile */
+    std::array<int, NumberPiles>  Wlen; /* the number of cards in each pile */
 
     /* Every different pile has a hash and a unique id. */
-    quint32 *Whash;
-    int *Wpilenum;
+    std::array<quint32, NumberPiles> Whash;
+    std::array<int, NumberPiles> Wpilenum = {}; // = {} for zero initialization
 
     /* Position freelist. */
 
-    POSITION *Freepos;
+    POSITION *Freepos = nullptr;
 
-#define MAXMOVES 64             /* > max # moves from any position */
+    static constexpr auto MAXMOVES = 64;             /* > max # moves from any position */
     MOVE Possible[MAXMOVES];
 
-    MemoryManager *mm;
+    std::unique_ptr<MemoryManager> mm;
     ExitStatus Status;             /* win, lose, or fail */
 
-#define NQUEUES 127
+    static constexpr auto NQUEUES = 127;
 
     POSITION *Qhead[NQUEUES]; /* separate queue for each priority */
     int Maxq;
@@ -157,31 +133,29 @@ protected:
     unsigned long Total_generated, Total_positions;
     qreal depth_sum;
 
-    POSITION *Stack;
+    POSITION *Stack = nullptr;
     QMap<qint32,bool> recu_pos;
     int max_positions;
-    bool debug;
 };
 
 /* Misc. */
 
-#define PS_DIAMOND 0x00         /* red */
-#define PS_CLUB    0x10         /* black */
-#define PS_HEART   0x20         /* red */
-#define PS_SPADE   0x30         /* black */
-#define PS_BLACK   0x10
-#define PS_COLOR   0x10         /* black if set */
-#define PS_SUIT    0x30         /* mask both suit bits */
+constexpr card_t PS_DIAMOND = 0x00;         /* red */
+constexpr card_t PS_CLUB    = 0x10;         /* black */
+constexpr card_t PS_HEART   = 0x20;         /* red */
+constexpr card_t PS_SPADE   = 0x30;         /* black */
+constexpr card_t PS_BLACK   = 0x10;
+constexpr card_t PS_COLOR   = 0x10;         /* black if set */
+constexpr card_t PS_SUIT    = 0x30;         /* mask both suit bits */
 
-#define NONE    0
-#define PS_ACE  1
-#define PS_KING 13
+constexpr card_t NONE    = 0;
+constexpr card_t PS_ACE  = 1;
+constexpr card_t PS_KING = 13;
 
-#define RANK(card) ((card) & 0xF)
-#define SUIT(card) (( (card) >> 4 ) & 3)
-#define COLOR(card) ((card) & PS_COLOR)
-#define DOWN(card) ((card) & ( 1 << 7 ) )
+constexpr card_t RANK(card_t card) {return card & 0xF;}
+constexpr card_t SUIT(card_t card) {return (card >> 4 ) & 3;}
 
-extern long all_moves;
+constexpr card_t COLOR(card_t card) {return card & PS_COLOR;}
+constexpr card_t DOWN(card_t card) {return (card) & ( 1 << 7 );}
 
 #endif // PATSOLVE_H

@@ -404,9 +404,6 @@ int SimonSolver::getOuts()
 SimonSolver::SimonSolver(const Simon *dealer)
     : FcSolveSolver()
 {
-#if 0
-    setNumberPiles( 10 );
-#endif
     deal = dealer;
 }
 

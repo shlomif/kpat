@@ -23,7 +23,7 @@
 class Simon;
 
 
-class SimonSolver : public FcSolveSolver
+class SimonSolver : public FcSolveSolver<10>
 {
 public:
     explicit SimonSolver(const Simon *dealer);

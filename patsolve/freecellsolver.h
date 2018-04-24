@@ -21,9 +21,10 @@
 
 #include "abstract_fc_solve_solver.h"
 
-class Freecell;
+constexpr auto Nwpiles = 8;
+constexpr auto Ntpiles = 4;
 
-class FreecellSolver : public FcSolveSolver
+class FreecellSolver : public FcSolveSolver<Nwpiles + Ntpiles>
 {
 public:
     explicit FreecellSolver(const Freecell *dealer);
