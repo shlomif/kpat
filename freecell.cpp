@@ -133,7 +133,6 @@ QString Freecell::solverFormat() const
     if (!tmp.isEmpty())
     {
         QString a = QString::fromLatin1("Freecells: %1\n");
-        // kDebug(11111) << "a is {{{{" << a << "}}}}" << endl;
         output += a.arg(tmp);
     }
 
@@ -143,9 +142,6 @@ QString Freecell::solverFormat() const
         for (QList<KCard*>::ConstIterator it = cards.begin(); it != cards.end(); ++it)
             output += rankToString((*it)->rank()) + suitToString((*it)->suit()) + ' ';
         output += '\n';
-    }
-    {
-        // kDebug(11111) << "output is {{{{" << output << "}}}}" << endl;
     }
     return output;
 }
