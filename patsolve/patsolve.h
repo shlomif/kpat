@@ -50,14 +50,9 @@ struct POSITION {
 class MemoryManager;
 
 template<size_t NumberPiles>
-struct Solver : public SolverInterface
+class Solver : public SolverInterface
 {
 
-public:
-    QList<MOVE> m_firstMoves;
-    QList<MOVE> m_winMoves;
-    std::atomic_bool m_shouldEnd;
-    int gy;
 public:
 
     Solver();
@@ -136,6 +131,10 @@ protected:
     POSITION *Stack = nullptr;
     QMap<qint32,bool> recu_pos;
     int max_positions;
+protected:
+    QList<MOVE> m_firstMoves;
+    QList<MOVE> m_winMoves;
+    std::atomic_bool m_shouldEnd;
 };
 
 /* Misc. */
