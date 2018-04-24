@@ -45,8 +45,8 @@ public:
 
     void * solver_instance;
     int solver_ret;
-    char * board_as_string;
-
+    // More than enough space for two decks.
+    char board_as_string[4 * 13 * 2 * 4 * 3];
 };
 
 #endif // ABSTRACT_FC_SOLVE_SOLVER_H

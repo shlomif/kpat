@@ -107,8 +107,6 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
                         solver_instance,
                         board_as_string
                     );
-                ::free(board_as_string);
-                board_as_string = NULL;
             }
             else
             {
@@ -194,7 +192,7 @@ FcSolveSolver::FcSolveSolver()
     : Solver()
     , solver_instance(NULL)
     , solver_ret(FCS_STATE_NOT_BEGAN_YET)
-    , board_as_string(NULL)
+    , board_as_string("")
 {
 }
 
@@ -233,11 +231,6 @@ void FcSolveSolver::unpack_cluster( unsigned int)
 
 FcSolveSolver::~FcSolveSolver()
 {
-    if (board_as_string)
-    {
-        ::free(board_as_string);
-        board_as_string = NULL;
-    }
     if (solver_instance)
     {
         freecell_solver_user_free(solver_instance);

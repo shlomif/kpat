@@ -415,13 +415,7 @@ card).  Temp cells and Out on the last two lines, if any. */
 
 void SimonSolver::translate_layout()
 {
-    if (board_as_string)
-    {
-        ::free(board_as_string);
-        board_as_string = NULL;
-    }
-
-    board_as_string = strdup(deal->solverFormat().toLatin1());
+    strcpy(board_as_string, deal->solverFormat().toLatin1());
 
     if (solver_instance)
     {
