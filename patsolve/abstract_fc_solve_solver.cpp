@@ -30,25 +30,21 @@ const long int MAX_ITERS_LIMIT = 200000;
 
 /* These two routines make and unmake moves. */
 
-template<size_t NumberPiles>
 void FcSolveSolver::make_move(MOVE *)
 {
     return;
 }
 
-template<size_t NumberPiles>
 void FcSolveSolver::undo_move(MOVE *)
 {
     return;
 }
 
 /* Get the possible moves from a position, and store them in Possible[]. */
-template<size_t NumberPiles>
-Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
+SolverInterface::ExitStatus FcSolveSolver::patsolve( int _max_positions )
 {
     int current_iters_count;
     max_positions = (_max_positions < 0) ? MAX_ITERS_LIMIT : _max_positions;
-    debug = _debug;
 
     init();
 
@@ -116,7 +112,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
                 solver_ret = freecell_solver_user_resume_solution(solver_instance);
             }
             {
-                QMutexLocker lock( &endMutex );
+                // QMutexLocker lock( &endMutex );
                 if ( m_shouldEnd )
                 {
                     continue_loop = false;
@@ -139,7 +135,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
             {
                 if (solver_instance)
                 {
-                    winMoves.clear();
+                    m_winMoves.clear();
                     while (freecell_solver_user_get_moves_left(solver_instance))
                     {
                         fcs_move_t move;
@@ -152,7 +148,7 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
 
                         new_move.fcs = move;
 
-                        winMoves.append( new_move );
+                        m_winMoves.append( new_move );
                     }
 
                     freecell_solver_user_free(solver_instance);
@@ -176,25 +172,21 @@ Solver::ExitStatus FcSolveSolver::patsolve( int _max_positions, bool _debug )
 
 /* Get the possible moves from a position, and store them in Possible[]. */
 
-template<size_t NumberPiles>
 int FcSolveSolver::get_possible_moves(int *, int *)
 {
     return 0;
 }
 
-template<size_t NumberPiles>
 bool FcSolveSolver::isWon()
 {
     return true;
 }
 
-template<size_t NumberPiles>
 int FcSolveSolver::getOuts()
 {
     return 0;
 }
 
-template<size_t NumberPiles>
 FcSolveSolver::FcSolveSolver()
     : Solver()
     , solver_instance(NULL)
@@ -203,13 +195,11 @@ FcSolveSolver::FcSolveSolver()
 {
 }
 
-template<size_t NumberPiles>
 unsigned int FcSolveSolver::getClusterNumber()
 {
     return 0;
 }
 
-template<size_t NumberPiles>
 void FcSolveSolver::print_layout()
 {
 #if 0
@@ -233,13 +223,11 @@ void FcSolveSolver::print_layout()
 #endif
 }
 
-template<size_t NumberPiles>
 void FcSolveSolver::unpack_cluster( unsigned int)
 {
     return;
 }
 
-template<size_t NumberPiles>
 FcSolveSolver::~FcSolveSolver()
 {
     if (solver_instance)

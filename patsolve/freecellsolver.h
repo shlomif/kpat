@@ -23,8 +23,9 @@
 
 constexpr auto Nwpiles = 8;
 constexpr auto Ntpiles = 4;
+class Freecell;
 
-class FreecellSolver : public FcSolveSolver<Nwpiles + Ntpiles>
+class FreecellSolver : public FcSolveSolver
 {
 public:
     explicit FreecellSolver(const Freecell *dealer);

@@ -62,7 +62,7 @@ public:
 
     Solver();
     virtual ~Solver();
-    virtual ExitStatus patsolve( int max_positions = -1, bool debug = false);
+    virtual ExitStatus patsolve( int max_positions = -1);
     bool recursive(POSITION *pos = nullptr);
     virtual void translate_layout() = 0;
     virtual MoveHint translateMove(const MOVE &m ) = 0;
