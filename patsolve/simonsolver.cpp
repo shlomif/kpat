@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "freecell-solver/fcs_user.h"
-#include "freecell-solver/fcs_cl.h"
+#include "fcs_user.h"
+#include "fcs_cl.h"
 
 #include "simonsolver.h"
 
