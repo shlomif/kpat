@@ -48,6 +48,13 @@ SolverInterface::ExitStatus FcSolveSolver::patsolve( int _max_positions )
 
     init();
 
+
+    int a = 0;
+    int num_moves = 0;
+    int n = get_possible_moves(&a, &num_moves);
+    Q_ASSERT( m_firstMoves.count() == 0 );
+    for (int j = 0; j < num_moves; ++j)
+        m_firstMoves.append( Possible[j] );
     if (!solver_instance)
     {
         {
@@ -146,6 +153,7 @@ SolverInterface::ExitStatus FcSolveSolver::patsolve( int _max_positions )
 
                         Q_ASSERT (verdict);
 
+                        new_move.is_fcs = true;
                         new_move.fcs = move;
 
                         m_winMoves.append( new_move );
@@ -171,11 +179,6 @@ SolverInterface::ExitStatus FcSolveSolver::patsolve( int _max_positions )
 }
 
 /* Get the possible moves from a position, and store them in Possible[]. */
-
-int FcSolveSolver::get_possible_moves(int *, int *)
-{
-    return 0;
-}
 
 bool FcSolveSolver::isWon()
 {
