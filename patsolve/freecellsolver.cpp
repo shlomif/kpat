@@ -196,23 +196,19 @@ void FreecellSolver::prioritize(MOVE *mp0, int n)
 #if 1
 int FreecellSolver::good_automove(int o, int r)
 {
-	int i;
-
 	if (r <= 2) {
 		return true;
 	}
 
-    int total = 0;
-    for (int i = 0; i < 4; ++i) {
-        KCard *c = deal->target[i]->topCard();
+    for (int foundation_idx = 0; foundation_idx < 4; ++foundation_idx) {
+        KCard *c = deal->target[foundation_idx]->topCard();
         if (c) {
             O[translateSuit( c->suit() ) >> 4] = c->rank();
-            total += c->rank();
         }
     }
 	/* Check the Out piles of opposite color. */
 
-	for (i = 1 - (o & 1); i < 4; i += 2) {
+	for (int i = 1 - (o & 1); i < 4; i += 2) {
 		if (O[i] < r - 1) {
 
 #if 1   /* Raymond's Rule */
@@ -244,24 +240,24 @@ int FreecellSolver::good_automove(int o, int r)
 
 int FreecellSolver::get_possible_moves(int *a, int *numout)
 {
-	int i, n, t, w, o, empty, emptyw;
+	int w;
 	card_t card;
 	MOVE *mp;
 
 	/* Check for moves from W to O. */
 
-	n = 0;
+	int n = 0;
 	mp = Possible;
 	for (w = 0; w < Nwpiles + Ntpiles; ++w) {
 		if (Wlen[w] > 0) {
 			card = *Wp[w];
-			o = SUIT(card);
-			empty = (O[o] == NONE);
+			int out_suit = SUIT(card);
+			const bool empty = (O[out_suit] == NONE);
 			if ((empty && (RANK(card) == PS_ACE)) ||
-			    (!empty && (RANK(card) == O[o] + 1))) {
+			    (!empty && (RANK(card) == O[out_suit] + 1))) {
 				mp->card_index = 0;
 				mp->from = w;
-				mp->to = o;
+				mp->to = out_suit;
 				mp->totype = O_Type;
                                 mp->turn_index = -1;
 				mp->pri = 0;    /* unused */
@@ -270,7 +266,7 @@ int FreecellSolver::get_possible_moves(int *a, int *numout)
 
 				/* If it's an automove, just do it. */
 
-				if (good_automove(o, RANK(card))) {
+				if (good_automove(out_suit, RANK(card))) {
 					*a = true;
                     mp[-1].pri = 127;
 					if (n != 1) {
