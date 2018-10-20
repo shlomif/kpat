@@ -795,10 +795,10 @@ MoveHint DealerScene::chooseHint()
 }
 
 
-void DealerScene::startNew( int dealNumber )
+void DealerScene::startNew( qlonglong dealNumber )
 {
     if ( dealNumber != -1 )
-        m_dealNumber = qBound( 1, dealNumber, INT_MAX );
+        m_dealNumber = qBound( 1LL, dealNumber, (1LL << 33) - 1 );
 
     // Only record the statistics and reset gameStarted if  we're starting a
     // new game number or we're restarting a game we've already won.

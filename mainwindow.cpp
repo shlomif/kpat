@@ -411,7 +411,7 @@ void MainWindow::startRandom()
     startNew(KRandom::random());
 }
 
-void MainWindow::startNew(int gameNumber)
+void MainWindow::startNew(qlonglong gameNumber)
 {
     m_dealer->startNew(gameNumber);
     setGameCaption();
@@ -808,7 +808,7 @@ void MainWindow::newNumberedDeal()
 }
 
 
-void MainWindow::startNumbered( int gameId, int dealNumber )
+void MainWindow::startNumbered( int gameId, qlonglong dealNumber )
 {
     if ( !m_dealer || m_dealer->allowedToStartNewGame() )
     {

@@ -138,7 +138,7 @@ signals:
     void cardsPutDown();
 
 public slots:
-    void startNew( int dealNumber = -1 );
+    void startNew( qlonglong dealNumber = -1 );
 
     void undo();
     void redo();
@@ -238,7 +238,7 @@ private:
     QTimer m_demoTimer;
     QTimer m_dropTimer;
 
-    int m_dealNumber;
+    qlonglong m_dealNumber;
     int m_loadedMoveCount;
     int m_neededFutureMoves;
     int m_supportedActions;

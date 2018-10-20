@@ -75,7 +75,7 @@ protected slots:
     void loadGame();
     void restart();
     void newNumberedDeal();
-    void startNumbered( int gameId, int dealNumber );
+    void startNumbered( int gameId, qlonglong dealNumber );
     void nextDeal();
     void previousDeal();
     void saveGame();
@@ -116,7 +116,7 @@ private:
     void setupActions();
     void setGameType( int id );
     void setGameCaption();
-    void startNew(int gameNumber);
+    void startNew(qlonglong gameNumber);
     void updateActions();
     void updateGameActionList();
     void updateSoundEngine();
