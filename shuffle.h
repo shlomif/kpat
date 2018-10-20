@@ -56,21 +56,21 @@ static inline qulonglong ms_freecell_rand__calc_init_seedx(
 }
 
 static inline uint ms_freecell_rand_rand(
-    qulonglong *const my_rand)
+    qulonglong & my_rand)
 {
-    *my_rand = ((*my_rand) * 214013 + 2531011);
-    return ((*my_rand) >> 16) & 0x7fff;
+    my_rand = (my_rand * 214013 + 2531011);
+    return ((my_rand >> 16) & 0x7fff);
 }
 
 static inline uint ms_freecell_rand_randp(
-    qulonglong *const my_rand)
+    qulonglong & my_rand)
 {
-    *my_rand = ((*my_rand) * 214013 + 2531011);
-    return ((*my_rand) >> 16) & 0xffff;
+    my_rand = (my_rand * 214013 + 2531011);
+    return ((my_rand >> 16) & 0xffff);
 }
 
 static inline uint ms_freecell_rand__game_num_rand(
-    qulonglong *const seedx_ptr, const qulonglong gnGameNumber)
+    qulonglong & seedx_ptr, const qulonglong gnGameNumber)
 {
     if (gnGameNumber < 0x100000000LL)
     {
@@ -94,7 +94,7 @@ static inline uint ms_freecell_rand__game_num_rand(
             // Freecell, so that game numbers are the same between the two applications.
             // For more inforation, see
             // http://support.microsoft.com/default.aspx?scid=kb;EN-US;Q28150
-            const uint rand = ms_freecell_rand__game_num_rand(&seedx,orig_seed);
+            const uint rand = ms_freecell_rand__game_num_rand(seedx, orig_seed);
             result.swap( i - 1, rand % i );
         }
 
