@@ -31,6 +31,7 @@ private slots:
     void shuffle_seed1();
     void shuffle_seed24();
     void shuffle_seed3e9();
+    void shuffle_seed6e9();
 };
 
 typedef const char * Card;
@@ -63,6 +64,15 @@ void TestCardsShuffle::shuffle_seed3e9()
     CardList have = KpatShuffle::shuffled<Card>(input, 3000000000ULL);
     CardList want(
         {"9S", "AS", "3C", "JC", "5S", "3S", "7D", "2C", "6S", "KD", "TC", "JD", "2D", "6D", "QD", "KC", "KS", "5C", "4S", "JH", "5H", "AC", "7S", "3D", "4H", "4C", "AD", "TD", "2H", "8H", "QC", "7H", "8S", "QH", "TH", "JS", "AH", "3H", "7C", "2S", "5D", "KH", "QS", "TS", "8C", "6C", "9C", "6H", "9D", "9H", "4D", "8D"}
+    );
+    QCOMPARE(have, want);
+}
+
+void TestCardsShuffle::shuffle_seed6e9()
+{
+    CardList have = KpatShuffle::shuffled<Card>(input, 6000000000ULL);
+    CardList want(
+        {"AC", "JD", "QD", "4C", "8H", "4S", "6C", "3S", "5D", "JC", "6H", "8C", "7D", "9S", "7S", "3C", "TC", "JH", "TS", "KD", "TH", "KC", "5S", "7H", "AS", "6S", "4H", "8D", "8S", "2S", "9D", "9C", "KS", "AD", "2H", "QS", "QC", "5H", "9H", "7C", "3H", "JS", "AH", "2C", "6D", "5C", "QH", "TD", "KH", "4D", "3D", "2D"}
     );
     QCOMPARE(have, want);
 }
