@@ -42,19 +42,59 @@
 #define SHUFFLE_H
 namespace KpatShuffle
 {
+    /*
+     * These routines were taken from https://fc-solve.shlomifish.org/
+     * which in turn were adapted from the source of patsolve -
+     * https://github.com/shlomif/patsolve/ - both under the MIT / Expat
+     * licence.
+     * */
+static inline qulonglong ms_freecell_rand__calc_init_seedx(
+    const qulonglong deal_idx)
+{
+    return (uint)(
+        (deal_idx < 0x100000000LL) ? deal_idx : (deal_idx - 0x100000000LL));
+}
+
+static inline uint ms_freecell_rand_rand(
+    qulonglong *const my_rand)
+{
+    *my_rand = ((*my_rand) * 214013 + 2531011);
+    return ((*my_rand) >> 16) & 0x7fff;
+}
+
+static inline uint ms_freecell_rand_randp(
+    qulonglong *const my_rand)
+{
+    *my_rand = ((*my_rand) * 214013 + 2531011);
+    return ((*my_rand) >> 16) & 0xffff;
+}
+
+static inline uint ms_freecell_rand__game_num_rand(
+    qulonglong *const seedx_ptr, const qulonglong gnGameNumber)
+{
+    if (gnGameNumber < 0x100000000LL)
+    {
+        const uint ret = ms_freecell_rand_rand(seedx_ptr);
+        return ((gnGameNumber < 0x80000000) ? ret : (ret | 0x8000));
+    }
+    else
+    {
+        return ms_freecell_rand_randp(seedx_ptr) + 1;
+    }
+}
+
     template<class T>
-    QList<T> shuffled( const QList<T> & cards, unsigned int seed )
+    QList<T> shuffled( const QList<T> & cards, const qulonglong orig_seed )
     {
         QList<T> result = cards;
+        qulonglong seedx = ms_freecell_rand__calc_init_seedx(orig_seed);
         for ( int i = result.size(); i > 1; --i )
         {
             // We use the same pseudorandom number generation algorithm as Windows
             // Freecell, so that game numbers are the same between the two applications.
             // For more inforation, see
             // http://support.microsoft.com/default.aspx?scid=kb;EN-US;Q28150
-            seed = 214013 * seed + 2531011;
-            int rand = ( seed >> 16 ) & 0x7fff;
-
+            const uint rand = ms_freecell_rand__game_num_rand(&seedx,orig_seed);
             result.swap( i - 1, rand % i );
         }
 
