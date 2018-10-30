@@ -4,7 +4,7 @@
 #include <QList>
 
 #include "../hint.h"
-#include "freecell-solver/fcs_user.h"
+#include "fcs_user.h"
 
 
 /* A card is represented as ( down << 6 ) + (suit << 4) + rank. */
