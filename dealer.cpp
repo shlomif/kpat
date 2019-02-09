@@ -2101,6 +2101,11 @@ void DealerScene::continueMultiStepMove()
         takeState();
 }
 
+QString DealerScene::solverFormat() const
+{
+    qCWarning(KPAT_LOG) << "solverFormat(), if called, should be overrided by the subclass!";
+    exit(-1);
+}
 
 #include "dealer.moc"
 #include "moc_dealer.cpp"
