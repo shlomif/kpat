@@ -2103,7 +2103,7 @@ void DealerScene::continueMultiStepMove()
 
 QString DealerScene::solverFormat() const
 {
-    qCWarning(KPAT_LOG) << "solverFormat(), if called, should be overrided by the subclass!";
+    qCCritical(KPAT_LOG) << "solverFormat(), if called, should be overridden by the subclass!";
     exit(-1);
 }
 
