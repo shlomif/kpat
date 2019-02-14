@@ -46,7 +46,7 @@ class Golf : public DealerScene
 public:
     explicit Golf( const DealerInfo * di );
     void initialize() Q_DECL_OVERRIDE;
-    virtual QString solverFormat() const;
+    QString solverFormat() const;
 
 protected:
     void setGameState( const QString & state ) Q_DECL_OVERRIDE;

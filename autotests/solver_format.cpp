@@ -37,6 +37,7 @@
 #include <QTest>
 #include "dealer.h"
 #include "dealerinfo.h"
+#include "golf.h"
 #include "../kpat_debug.h"
 
 class TestSolverFormat: public QObject
@@ -77,7 +78,7 @@ void TestSolverFormat::solverFormat_deal1()
     assert(f);
     f->deck()->stopAnimations();
     f->startNew( 1 );
-    QString have = f->solverFormat();
+    QString have = static_cast<Golf *>(f)->solverFormat();
     QString want(
         "Foundations: TH\n"
         "Talon: 8H 2C JH 7D 6D 8S 8D QS 6C 3D 8C TC 6S 9C 2H 6H\n"

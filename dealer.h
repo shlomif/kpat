@@ -120,7 +120,6 @@ public:
     void recordGameStatistics();
 
     QImage createDump() const;
-    virtual QString solverFormat() const;
 
 signals:
     void undoPossible(bool poss);
