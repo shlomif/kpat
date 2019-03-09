@@ -166,10 +166,8 @@ QString Simon::solverFormat() const
     if (!tmp.isEmpty())
         output += QStringLiteral("Foundations: %1\n").arg(tmp);
 
-    for (int i = 0; i < 10 ; i++)
-    {
-        cardsListToLine(output, store[i]->cards());
-    }
+    pilesToLines(output, store, 10);
+
     return output;
 }
 

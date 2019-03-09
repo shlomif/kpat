@@ -180,8 +180,7 @@ QString Golf::solverFormat() const
         output += QStringLiteral(" ")+cardToRankSuitString(talon->at( i ));
     }
     output += "\n";
-    for (int i = 0; i < 7 ; i++)
-        cardsListToLine(output, stack[i]->cards());
+    pilesToLines(output, stack, 7);
     return output;
 }
 

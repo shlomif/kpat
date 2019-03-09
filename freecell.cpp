@@ -134,8 +134,7 @@ QString Freecell::solverFormat() const
         output += a.arg(tmp);
     }
 
-    for (int i = 0; i < 8 ; i++)
-        cardsListToLine(output, store[i]->cards());
+    pilesToLines(output, store, 8);
     return output;
 }
 

@@ -64,4 +64,5 @@ private:
     PileRole m_role;
 };
 
+extern void pilesToLines(QString & output, const PatPile * const * const piles, const size_t len);
 #endif

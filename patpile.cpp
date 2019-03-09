@@ -115,3 +115,10 @@ void PatPile::paintGraphic( QPainter * painter, qreal highlightedness )
     }
 }
 
+#include "pileutils.h"
+
+void pilesToLines(QString & output, const PatPile * const * const piles, const size_t len)
+{
+    for (size_t i = 0; i < len ; ++i)
+        cardsListToLine(output, piles[i]->cards());
+}
